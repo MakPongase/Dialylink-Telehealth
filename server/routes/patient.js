@@ -1168,24 +1168,36 @@ router.post('/ai/health-chat', async (req, res) => {
         [patientId]
       ),
       pool.query(
-        `SELECT u.full_name as doctor_name, dp.id as doctor_id,
-           (SELECT COUNT(*) FROM patient_profiles WHERE connected_doctor_id = dp.id) as patient_count
-         FROM patient_profiles pp
-         JOIN doctor_profiles dp ON pp.connected_doctor_id = dp.id
+        `SELECT u.full_name, u.id, dp.specialization, 
+                dp.hospital_affiliation, dp.practice_city, dp.practice_province,
+                (SELECT COUNT(*) FROM patient_profiles WHERE connected_doctor_id = dp.id) as patient_count
+         FROM doctor_profiles dp
          JOIN users u ON dp.user_id = u.id
-         WHERE pp.id = $1`,
+         WHERE dp.id = 
+           (SELECT connected_doctor_id FROM patient_profiles WHERE id = $1)`,
         [patientId]
       ),
       pool.query(
-        `SELECT address FROM patient_profiles WHERE id = $1`,
+        `SELECT pp.city, pp.province, pp.address as street_address
+         FROM patient_profiles pp
+         WHERE pp.id = $1`,
         [patientId]
       )
     ]);
 
-    const doctorData = doctorRes.rows[0];
-    const doctorName = doctorData?.doctor_name || 'your doctor';
-    const doctorPatientCount = doctorData?.patient_count || 'unknown';
-    const patientAddress = (addressRes && addressRes.rows[0]?.address) || 'Unknown Location';
+    const doctorData = doctorRes.rows[0] || {};
+    const doctorName = doctorData.full_name || 'your doctor';
+    const doctorCity = doctorData.practice_city || 'their clinic';
+    const doctorProvince = doctorData.practice_province || '';
+    const doctorSpecialization = doctorData.specialization || 'Nephrology';
+    const doctorAffiliation = doctorData.hospital_affiliation || 'their hospital';
+    const doctorPatientCount = doctorData.patient_count || 'unknown';
+    
+    const patientLocation = addressRes.rows[0] || {};
+    const patientCity = patientLocation.city || patientLocation.street_address || 'Unknown City';
+    const patientProvince = patientLocation.province || '';
+    const patientAddress = `${patientCity}${patientProvince ? ', ' + patientProvince : ''}`;
+    const doctorLocationString = `${doctorCity}${doctorProvince ? ', ' + doctorProvince : ''}`;
     const patientName = req.user.full_name || 'Patient';
 
     const formattedSessions = sessionsRes.rows.length > 0
@@ -1221,7 +1233,11 @@ Your boundaries (weave in naturally):
 YOUR PATIENT'S DATA:
 Name: ${patientName}
 Location: ${patientAddress}
-Doctor: Dr. ${doctorName}
+
+Connected Doctor: Dr. ${doctorName}
+Doctor Location: ${doctorLocationString}
+Doctor Specialization: ${doctorSpecialization}
+Doctor Affiliation: ${doctorAffiliation}
 Doctor's patient count: ${doctorPatientCount} patients
 Doctor's next available: Ask through DialyLink chat to schedule
 

@@ -729,7 +729,7 @@ router.get('/prescriptions/:groupId/pdf', async (req, res) => {
 
     // 3. Fetch Doctor Profile
     const docRes = await pool.query(
-      `SELECT u.full_name, dp.license_number, dp.specialization 
+      `SELECT u.full_name, dp.license_number, dp.specialization, dp.signature_url 
        FROM doctor_profiles dp JOIN users u ON dp.user_id = u.id 
        WHERE dp.id = $1`, [group.doctor_id]
     );
@@ -805,8 +805,23 @@ router.get('/prescriptions/:groupId/pdf', async (req, res) => {
     doc.fontSize(9).font('Helvetica').fillColor('#9ca3af').text('This prescription was issued digitally via DialyLink', 40, footerY);
     doc.text(`Ref: ${groupId.substring(0,8)}`, 40, footerY + 15);
     
-    doc.font('Helvetica-Oblique').text(`${doctor.full_name}`, doc.page.width - 200, footerY, { align: 'right' });
-    doc.font('Helvetica').text('Doctor\'s e-signature', doc.page.width - 200, footerY + 15, { align: 'right' });
+    if (doctor.signature_url) {
+      try {
+        const sigResponse = await fetch(doctor.signature_url);
+        if (sigResponse.ok) {
+          const arrayBuffer = await sigResponse.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          
+          doc.image(buffer, doc.page.width - 150, footerY - 40, { width: 110 });
+        }
+      } catch (err) {
+        console.error('Failed to load signature image', err);
+      }
+    } else {
+      doc.font('Helvetica-Oblique').text(`${doctor.full_name}`, doc.page.width - 200, footerY, { align: 'right' });
+    }
+    
+    doc.font('Helvetica-Bold').fillColor('#1f2937').text(`Dr. ${doctor.full_name}`, doc.page.width - 200, footerY + 15, { align: 'right' });
 
     doc.end();
 

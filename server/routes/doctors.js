@@ -13,7 +13,8 @@ router.get('/directory', async (req, res) => {
   try {
     let query = `
       SELECT dp.id, u.id as user_id, u.full_name, u.profile_photo_url, 
-             dp.specialization, dp.years_of_experience, dp.hospital_affiliation, dp.bio
+             dp.specialization, dp.years_experience as years_of_experience, dp.hospital_affiliation, dp.bio,
+             dp.practice_city, dp.practice_province
       FROM doctor_profiles dp
       JOIN users u ON dp.user_id = u.id
       WHERE dp.is_approved = true

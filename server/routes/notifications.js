@@ -43,6 +43,26 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /latest (Returns only the most recent 1 notification for the user)
+router.get('/latest', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('id, user_id, type, message, is_read, created_at')
+      .eq('user_id', req.user.id)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (error) throw error;
+
+    const notification = data && data.length > 0 ? data[0] : null;
+    res.json({ notification });
+  } catch (error) {
+    console.error('Error fetching latest notification:', error);
+    res.status(500).json({ error: 'Failed to fetch notification' });
+  }
+});
+
 // PUT /:id/read (mark notification as read)
 router.put('/:id/read', async (req, res) => {
   const notificationId = req.params.id;

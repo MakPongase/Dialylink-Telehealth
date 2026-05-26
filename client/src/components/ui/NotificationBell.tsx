@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../../lib/api';
 import { createClient } from '@supabase/supabase-js';
+import { useSmartNotificationPolling, Notification } from '../../hooks/useSmartNotificationPolling';
 
 // Icons mapping based on notification type
 const getIconForType = (type: string) => {
@@ -69,6 +70,18 @@ export function NotificationBell({ role }: { role: 'patient' | 'doctor' }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [role]);
+
+  const handleNewNotification = React.useCallback((notif: Notification) => {
+    setNotifications(prev => {
+      // Avoid duplicates
+      if (prev.find(n => n.id === notif.id)) return prev;
+      return [notif, ...prev].slice(0, 50);
+    });
+  }, []);
+
+  useSmartNotificationPolling({
+    onNewNotification: handleNewNotification
+  });
 
   const markAllRead = async () => {
     // Optional: add a bulk update endpoint in the future

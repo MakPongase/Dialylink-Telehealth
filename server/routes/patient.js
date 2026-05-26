@@ -1191,7 +1191,7 @@ router.get('/profile', async (req, res) => {
   try {
     const patientProfileId = await getPatientProfileId(req.user.id);
     const profileRes = await pool.query(
-      `SELECT pp.date_of_birth, pp.blood_type, pp.address, pp.emergency_contact_name, pp.emergency_contact_phone,
+      `SELECT pp.date_of_birth, pp.blood_type, pp.address, pp.emergency_contact_name, pp.emergency_contact_phone, pp.connected_doctor_id,
               u.full_name, u.email, u.phone, u.profile_photo_url
        FROM patient_profiles pp
        JOIN users u ON pp.user_id = u.id
@@ -1209,24 +1209,34 @@ router.get('/profile', async (req, res) => {
 });
 
 // PATCH /profile
+// PATCH /profile
 router.patch('/profile', async (req, res) => {
-  const { date_of_birth, blood_type, address, emergency_contact_name, emergency_contact_phone, phone } = req.body;
+  const { date_of_birth, blood_type, address, emergency_contact_name, emergency_contact_phone, phone, email, full_name } = req.body;
   try {
     const patientProfileId = await getPatientProfileId(req.user.id);
 
     await pool.query(
       `UPDATE patient_profiles 
-       SET date_of_birth = COALESCE($1, date_of_birth),
-           blood_type = COALESCE($2, blood_type),
-           address = COALESCE($3, address),
-           emergency_contact_name = COALESCE($4, emergency_contact_name),
-           emergency_contact_phone = COALESCE($5, emergency_contact_phone)
+       SET date_of_birth = $1,
+           blood_type = $2,
+           address = $3,
+           emergency_contact_name = $4,
+           emergency_contact_phone = $5
        WHERE id = $6`,
       [date_of_birth || null, blood_type || null, address || null, emergency_contact_name || null, emergency_contact_phone || null, patientProfileId]
     );
 
     if (phone) {
       await pool.query('UPDATE users SET phone = $1 WHERE id = $2', [phone, req.user.id]);
+    }
+    if (full_name) {
+      await pool.query('UPDATE users SET full_name = $1 WHERE id = $2', [full_name, req.user.id]);
+    }
+    if (email) {
+      await pool.query('UPDATE users SET email = $1 WHERE id = $2', [email, req.user.id]);
+      const { createClient } = require('@supabase/supabase-js');
+      const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+      await supabase.auth.admin.updateUserById(req.user.id, { email });
     }
 
     return res.json({ success: true, message: 'Profile updated successfully.' });

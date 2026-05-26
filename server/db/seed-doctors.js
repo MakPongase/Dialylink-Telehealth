@@ -55,8 +55,8 @@ async function seedDoctors() {
       if (profileCheck.rowCount === 0) {
         await pool.query(
           `INSERT INTO doctor_profiles 
-           (user_id, license_number, specialization, connection_code, is_approved, status, hospital_affiliation, years_experience, address, practice_city, practice_province, bio) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+           (user_id, license_number, specialization, connection_code, is_approved, status, hospital_affiliation, years_experience, address, practice_city, practice_province, bio, is_listed, accepting_patients) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, true, true)`,
           [
             userId, license, doc.spec, code, true, 'approved', doc.hospital, years, doc.address, doc.city, doc.province, 
             `Experienced ${doc.spec} serving ${doc.city}.`
@@ -64,7 +64,13 @@ async function seedDoctors() {
         );
         console.log(`Seeded Dr. ${doc.name}`);
       } else {
-        console.log(`Profile for Dr. ${doc.name} already exists.`);
+        await pool.query(
+          `UPDATE doctor_profiles 
+           SET is_listed = true, accepting_patients = true 
+           WHERE user_id = $1`,
+          [userId]
+        );
+        console.log(`Updated Dr. ${doc.name} to be listed and accepting patients.`);
       }
     }
     

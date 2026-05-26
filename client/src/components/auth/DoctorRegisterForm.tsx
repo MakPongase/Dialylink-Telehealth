@@ -347,6 +347,8 @@ export default function DoctorRegisterForm({ onBackToRoleSelection }: DoctorRegi
         hospital_affiliation: hospitalAffiliation,
         phone: formattedPhone,
         address: fullAddress,
+        city: selectedCityName,
+        province: selectedProvinceName,
         bio,
         profile_photo_url: profilePhotoUrl,
         prc_doc_url: prcIdDocUrl

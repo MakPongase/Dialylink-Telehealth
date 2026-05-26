@@ -34,7 +34,7 @@ router.post('/register', async (req, res) => {
   const { 
     full_name, email, password, role, 
     license_number, specialization, years_experience, 
-    hospital_affiliation, phone, address, bio, 
+    hospital_affiliation, phone, address, city, province, bio, 
     profile_photo_url, prc_doc_url 
   } = req.body;
 
@@ -73,8 +73,8 @@ router.post('/register', async (req, res) => {
       const connectionCode = await generateConnectionCode();
       await client.query(
         `INSERT INTO doctor_profiles 
-         (user_id, license_number, specialization, connection_code, is_approved, status, hospital_affiliation, years_experience, prc_doc_url, bio, address) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+         (user_id, license_number, specialization, connection_code, is_approved, status, hospital_affiliation, years_experience, prc_doc_url, bio, address, practice_city, practice_province) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
         [
           user.id, 
           license_number || 'PENDING', 
@@ -86,13 +86,15 @@ router.post('/register', async (req, res) => {
           years_experience || 0,
           prc_doc_url || null,
           bio || null,
-          address || null
+          address || null,
+          city || null,
+          province || null
         ]
       );
     } else if (role === 'patient') {
       await client.query(
-        `INSERT INTO patient_profiles (user_id, address) VALUES ($1, $2)`,
-        [user.id, address || null]
+        `INSERT INTO patient_profiles (user_id, address, city, province) VALUES ($1, $2, $3, $4)`,
+        [user.id, address || null, city || null, province || null]
       );
     }
 

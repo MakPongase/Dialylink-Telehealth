@@ -274,6 +274,8 @@ export default function PatientRegisterForm({ onBackToRoleSelection }: PatientRe
         date_of_birth: dateOfBirth,
         blood_type: bloodType,
         address: fullAddress,
+        city: selectedCityName,
+        province: selectedProvinceName,
         emergency_contact_name: fullEmergencyName,
         emergency_contact_phone: formattedPhone
       });

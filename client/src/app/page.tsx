@@ -8,9 +8,21 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Activity, ShieldCheck, HeartHandshake, CalendarRange } from 'lucide-react';
 
 export default function Home() {
+  const router = useRouter();
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (token && role) {
+      if (role === 'patient') router.replace('/patient/dashboard');
+      else if (role === 'doctor') router.replace('/doctor/dashboard');
+      else if (role === 'admin') router.replace('/admin/dashboard');
+    }
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col relative overflow-x-hidden">
@@ -36,7 +48,6 @@ export default function Home() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
           <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
           <Link href="/how-it-works" className="hover:text-blue-600 transition-colors">How it Works</Link>
-          <a href="#about" className="hover:text-blue-600 transition-colors">About</a>
         </nav>
 
         <div className="flex items-center gap-4">

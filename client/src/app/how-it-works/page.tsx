@@ -6,8 +6,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Activity,
   UserPlus,
@@ -24,6 +25,17 @@ import {
 
 export default function HowItWorksPage() {
   const [activeTab, setActiveTab] = useState<'patient' | 'doctor'>('patient');
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (token && role) {
+      if (role === 'patient') router.replace('/patient/dashboard');
+      else if (role === 'doctor') router.replace('/doctor/dashboard');
+      else if (role === 'admin') router.replace('/admin/dashboard');
+    }
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col relative overflow-x-hidden">
@@ -37,7 +49,6 @@ export default function HowItWorksPage() {
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
           <Link href="/#features" className="hover:text-blue-600 transition-colors">Features</Link>
           <Link href="/how-it-works" className="text-blue-600 transition-colors font-semibold">How it Works</Link>
-          <Link href="/#about" className="hover:text-blue-600 transition-colors">About</Link>
         </nav>
 
         <div className="flex items-center gap-4">

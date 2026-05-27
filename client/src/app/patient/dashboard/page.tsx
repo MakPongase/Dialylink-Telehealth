@@ -11,11 +11,18 @@ import { PatientSidebar } from '../../../components/patient/PatientSidebar';
 import { NotificationBell } from '../../../components/ui/NotificationBell';
 import { HealthCompanionDrawer } from '../../../components/patient/HealthCompanionDrawer';
 import { PatientOnboardingBanner } from '../../../components/patient/PatientOnboardingBanner';
+import { Modal } from '../../../components/ui/Modal';
 
 export default function PatientDashboard() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
+
+  const [connectModalOpen, setConnectModalOpen] = useState(false);
+  const [connectionCode, setConnectionCode] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectError, setConnectError] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -31,6 +38,33 @@ export default function PatientDashboard() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConnect = async () => {
+    const code = connectionCode.trim().toUpperCase();
+    if (!code) {
+      setConnectError('Please enter a connection code.');
+      return;
+    }
+
+    setIsConnecting(true);
+    setConnectError('');
+
+    try {
+      const res = await api.post('/api/patient/connect', { connection_code: code });
+      if (res.data.success) {
+        setToastMessage('Connected successfully! Refreshing dashboard...');
+        setConnectModalOpen(false);
+        setConnectionCode('');
+        fetchDashboardData();
+        setTimeout(() => setToastMessage(''), 3000);
+      }
+    } catch (error: any) {
+      console.error(error);
+      setConnectError(error.response?.data?.message || 'Invalid code. Please check with your doctor.');
+    } finally {
+      setIsConnecting(false);
     }
   };
 
@@ -65,7 +99,13 @@ export default function PatientDashboard() {
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <PatientSidebar activeItem="dashboard" />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {toastMessage && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-full shadow-lg text-sm font-semibold z-50 animate-in fade-in slide-in-from-top-4">
+            {toastMessage}
+          </div>
+        )}
+
         {/* Topbar & Banner */}
         <header className="shrink-0 bg-white border-b border-gray-200 z-10 shadow-sm">
           <div className="h-16 flex items-center px-8 justify-between">
@@ -81,12 +121,20 @@ export default function PatientDashboard() {
                 <AlertCircle className="h-4 w-4" />
                 You are not connected to a doctor yet. Connect with a doctor to book appointments and receive prescriptions.
               </div>
-              <button 
-                onClick={() => router.push('/patient/find-doctor')}
-                className="text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-4 py-1.5 rounded-full transition-colors"
-              >
-                Find a Doctor &rarr;
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setConnectModalOpen(true)}
+                  className="text-xs font-bold text-amber-700 bg-white border border-amber-200 hover:bg-amber-100 px-4 py-1.5 rounded-full transition-colors"
+                >
+                  Enter Clinic Code
+                </button>
+                <button 
+                  onClick={() => router.push('/patient/find-doctor')}
+                  className="text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-4 py-1.5 rounded-full transition-colors"
+                >
+                  Find a Doctor &rarr;
+                </button>
+              </div>
             </div>
           )}
         </header>
@@ -275,8 +323,11 @@ export default function PatientDashboard() {
                     </div>
                     <h3 className="font-bold text-gray-900 mb-2">You're not connected to a doctor yet</h3>
                     <p className="text-sm text-gray-500 mb-5">Find a specialist and connect using their clinic code.</p>
-                    <button onClick={() => router.push('/patient/find-doctor')} className="w-full flex justify-center items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors shadow-sm">
-                      Find a Doctor
+                    <button onClick={() => setConnectModalOpen(true)} className="w-full mb-2 flex justify-center items-center gap-2 bg-teal-600 text-white hover:bg-teal-700 px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors shadow-sm">
+                      Enter Clinic Code
+                    </button>
+                    <button onClick={() => router.push('/patient/find-doctor')} className="w-full flex justify-center items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors shadow-sm">
+                      Browse Directory
                     </button>
                   </div>
                 )}
@@ -316,6 +367,41 @@ export default function PatientDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Connect Modal */}
+      {connectModalOpen && (
+        <Modal
+          isOpen={connectModalOpen}
+          onClose={() => {
+            if (isConnecting) return;
+            setConnectModalOpen(false);
+            setConnectionCode('');
+            setConnectError('');
+          }}
+          title="Connect with Doctor"
+          message={
+            <div className="space-y-4">
+              <p>Enter the 6-digit connection code provided by your doctor or clinic to establish a connection.</p>
+              <input
+                type="text"
+                placeholder="e.g. A1B2C3"
+                value={connectionCode}
+                onChange={e => setConnectionCode(e.target.value.toUpperCase())}
+                maxLength={6}
+                className="w-full border border-gray-300 rounded-lg p-3 text-center text-2xl font-bold tracking-[0.5em] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 uppercase"
+                disabled={isConnecting}
+              />
+              {connectError && (
+                <p className="text-red-500 text-sm font-medium">{connectError}</p>
+              )}
+            </div>
+          }
+          type="info"
+          confirmText={isConnecting ? "Connecting..." : "Connect"}
+          onConfirm={handleConnect}
+        />
+      )}
+
       <HealthCompanionDrawer doctorName={connected_doctor?.full_name || 'your doctor'} />
     </div>
   );

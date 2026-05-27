@@ -179,7 +179,7 @@ function ChatContent() {
         
         <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Contacts */}
-        <aside className="w-80 bg-white border-r border-gray-200 flex flex-col shrink-0">
+        <aside className={`bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all ${activeContact ? 'hidden md:flex md:w-80' : 'flex w-full md:w-80'}`}>
           <div className="p-4 border-b border-gray-100">
             <div className="relative">
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -229,12 +229,18 @@ function ChatContent() {
         </aside>
 
         {/* Chat Window */}
-        <section className="flex-1 flex flex-col bg-[#F8FAFC]">
+        <section className={`flex-1 flex flex-col bg-[#F8FAFC] ${activeContact ? 'flex' : 'hidden md:flex'}`}>
           {activeContact ? (
             <>
               {/* Chat Header */}
               <div className="h-16 bg-white border-b border-gray-200 flex items-center px-6 shrink-0 shadow-sm z-10">
                 <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setActiveContact(null)}
+                    className="md:hidden mr-1 p-1 -ml-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
                   {activeContact.profile_photo_url ? (
                     <img src={activeContact.profile_photo_url} className="w-8 h-8 rounded-full border border-gray-200 object-cover" alt="" />
                   ) : (

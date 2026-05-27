@@ -13,6 +13,7 @@ import {
   MessageSquare, Settings, LogOut, HeartPulse, Bot,
   Menu, X
 } from 'lucide-react';
+import api from '../../lib/api';
 
 interface PatientSidebarProps {
   activeItem: 'dashboard' | 'monitoring' | 'records' | 'appointments' | 'chat' | 'settings' | 'health-companion';
@@ -26,6 +27,7 @@ export function PatientSidebar({ activeItem }: PatientSidebarProps) {
   const [hasDoctor, setHasDoctor] = useState(false);
 
   React.useEffect(() => {
+    // Initial check from localStorage
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
@@ -35,6 +37,21 @@ export function PatientSidebar({ activeItem }: PatientSidebarProps) {
         setHasDoctor(false);
       }
     }
+    
+    // Background fetch to ensure accuracy
+    api.get('/api/patient/dashboard').then(res => {
+      if (res.data.success) {
+        const connectedDoc = res.data.data.connected_doctor;
+        setHasDoctor(!!connectedDoc);
+        if (userStr) {
+          try {
+            const user = JSON.parse(userStr);
+            user.connected_doctor_id = connectedDoc ? connectedDoc.id : null;
+            localStorage.setItem('user', JSON.stringify(user));
+          } catch(e) {}
+        }
+      }
+    }).catch(() => {});
   }, []);
 
   const handleLogout = () => {

@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../lib/api';
-import { Bot, Info, Search, Send, Loader2 } from 'lucide-react';
+import { Bot, Info, Search, Send, Loader2, ArrowLeft } from 'lucide-react';
 import { AIChatBubble } from './AIChatBubble';
 
 interface Patient {
@@ -106,7 +106,7 @@ export function ClinicalAdvisorTab() {
     <div className="flex w-full h-full bg-[#F8FAFC] overflow-hidden">
       
       {/* LEFT PANEL: Patient Selector */}
-      <aside className="w-80 bg-white border-r border-gray-200 flex flex-col shrink-0">
+      <aside className={`bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all ${selectedPatient ? 'hidden md:flex md:w-80' : 'flex w-full md:w-80'}`}>
         <div className="p-4 border-b border-gray-100">
           <h2 className="font-bold text-gray-900 mb-3 text-lg">Select Patient</h2>
           <div className="relative">
@@ -147,7 +147,7 @@ export function ClinicalAdvisorTab() {
       </aside>
 
       {/* RIGHT PANEL: Chat Interface */}
-      <section className="flex-1 flex flex-col bg-[#F8FAFC]">
+      <section className={`flex-1 flex flex-col bg-[#F8FAFC] ${selectedPatient ? 'flex' : 'hidden md:flex'}`}>
         {!selectedPatient ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
             <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4 text-blue-500">
@@ -159,10 +159,18 @@ export function ClinicalAdvisorTab() {
         ) : (
           <>
             <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white shadow-sm z-10">
-              <h2 className="font-bold text-gray-900 flex items-center gap-2">
-                <Bot className="text-blue-600 h-5 w-5" /> 
-                Clinical Advisor — {selectedPatient.name}
-              </h2>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setSelectedPatient(null)}
+                  className="md:hidden mr-1 p-1 -ml-2 text-gray-500 hover:text-gray-700"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                  <Bot className="text-blue-600 h-5 w-5" /> 
+                  <span className="truncate max-w-[200px]">Clinical Advisor — {selectedPatient.name}</span>
+                </h2>
+              </div>
               <div className="text-xs text-gray-400 flex items-center gap-1 font-medium bg-gray-50 px-2 py-1 rounded-full border border-gray-200">
                 <Info size={14} /> AI Beta
               </div>

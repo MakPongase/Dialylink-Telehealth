@@ -67,6 +67,8 @@ export default function PatientDetailsPage() {
   const [activeTab, setActiveTab] = useState('sessions');
   const [doctorNotes, setDoctorNotes] = useState('');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [sessionPage, setSessionPage] = useState(1);
+  const sessionsPerPage = 5;
 
   // Alerts
   const [scheduleState, setScheduleState] = useState({
@@ -258,6 +260,9 @@ export default function PatientDetailsPage() {
 
   const { profile, sessions, labs, prescriptions, consultations } = patientData;
   const age = profile.date_of_birth ? new Date().getFullYear() - new Date(profile.date_of_birth).getFullYear() : 'N/A';
+  
+  const totalSessionPages = Math.ceil((sessions || []).length / sessionsPerPage);
+  const paginatedSessions = (sessions || []).slice((sessionPage - 1) * sessionsPerPage, sessionPage * sessionsPerPage);
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans selection:bg-blue-100 overflow-hidden">
@@ -297,7 +302,7 @@ export default function PatientDetailsPage() {
               </div>
               <div className="text-sm text-gray-500 mt-2 flex flex-wrap gap-x-6 gap-y-1 font-medium">
                 <span><strong className="text-gray-700">Age:</strong> {age}</span>
-                <span><strong className="text-gray-700">DOB:</strong> {profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : 'N/A'}</span>
+                <span><strong className="text-gray-700">DOB:</strong> {profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'}</span>
                 <span><strong className="text-gray-700">Blood Type:</strong> {profile.blood_type || 'Unknown'}</span>
                 <span><strong className="text-gray-700">Phone:</strong> {profile.phone || 'N/A'}</span>
               </div>
@@ -358,7 +363,7 @@ export default function PatientDetailsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
-                      {sessions.slice(0, 10).map((s: any) => {
+                      {paginatedSessions.map((s: any) => {
                         let idwgBadge = <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-2 py-1 rounded">No previous session</span>;
                         if (s.idwg_kg !== null && s.idwg_kg !== undefined) {
                           const idwg = parseFloat(s.idwg_kg);
@@ -377,7 +382,7 @@ export default function PatientDetailsPage() {
 
                         return (
                         <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{new Date(s.session_date).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{new Date(s.session_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                           <td className="px-6 py-4">
                             {s.dialysis_type === 'peritoneal' ? (
                               <span className="text-[10px] font-bold text-purple-700 bg-purple-100 border border-purple-200 px-2 py-1 rounded">PD</span>
@@ -419,6 +424,27 @@ export default function PatientDetailsPage() {
                       )}
                     </tbody>
                   </table>
+                  {totalSessionPages > 1 && (
+                    <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-white">
+                      <button 
+                        onClick={() => setSessionPage(Math.max(1, sessionPage - 1))}
+                        disabled={sessionPage === 1}
+                        className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-gray-200"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-sm font-medium text-gray-500">
+                        Page {sessionPage} of {totalSessionPages}
+                      </span>
+                      <button 
+                        onClick={() => setSessionPage(Math.min(totalSessionPages, sessionPage + 1))}
+                        disabled={sessionPage === totalSessionPages}
+                        className="px-4 py-2 text-sm font-semibold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-gray-200"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
              )}
 
@@ -437,7 +463,7 @@ export default function PatientDetailsPage() {
                     <tbody className="divide-y divide-gray-50">
                       {labs.map((lab: any) => (
                         <tr key={lab.id} className="hover:bg-gray-50/50 transition-colors">
-                          <td className="px-6 py-4 font-semibold text-gray-900">{new Date(lab.result_date).toLocaleDateString()}</td>
+                          <td className="px-6 py-4 font-semibold text-gray-900">{new Date(lab.result_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                           <td className="px-6 py-4 font-medium text-gray-700 capitalize">{lab.test_type.replace('_', ' ')}</td>
                           <td className="px-6 py-4 text-gray-500">{lab.file_name}</td>
                           <td className="px-6 py-4 text-right">
@@ -473,7 +499,7 @@ export default function PatientDetailsPage() {
                        <div key={g.id} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm bg-white">
                           <div className="bg-gray-50 border-b border-gray-100 px-5 py-3 flex justify-between items-center">
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-semibold text-gray-900">Issued: {new Date(g.issued_at).toLocaleDateString()}</span>
+                              <span className="text-sm font-semibold text-gray-900">Issued: {new Date(g.issued_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
                                  Active
                               </span>

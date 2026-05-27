@@ -1005,34 +1005,53 @@ Settings to use:
 The doctor trusts you to be accurate and grounded in their patient's data. 
 Never speculate beyond what the data shows.`;
 
-    // Call Gemini API
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents: messages,
-          generationConfig: {
-            maxOutputTokens: 800,
-            temperature: 0.3
-          }
-        })
+    // Call Gemini API with fallback
+    const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    const body = {
+      system_instruction: { parts: [{ text: systemInstruction }] },
+      contents: messages,
+      generationConfig: {
+        maxOutputTokens: 800,
+        temperature: 0.3
       }
-    );
+    };
 
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Gemini API Error:', data);
+    let lastData = null;
+    let lastResponseOk = false;
+
+    for (const model of models) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+          }
+        );
+        lastData = await response.json();
+        lastResponseOk = response.ok;
+        
+        if (response.ok) {
+          break; // Success! Exit the fallback loop.
+        } else {
+          console.warn(`[AI Fallback] Model ${model} failed. Trying next...`);
+        }
+      } catch (err) {
+        console.warn(`[AI Fallback] Fetch error for ${model}. Trying next...`);
+      }
+    }
+
+    if (!lastResponseOk) {
+      console.error('Gemini API Error:', lastData);
       let errorMessage = 'AI service unavailable. Try again.';
-      if (data && data.error && data.error.message) {
-        errorMessage = data.error.message;
+      if (lastData && lastData.error && lastData.error.message) {
+        errorMessage = lastData.error.message;
       }
       return res.status(503).json({ success: false, message: errorMessage });
     }
 
-    const reply = data.candidates[0].content.parts[0].text;
+    const reply = lastData.candidates[0].content.parts[0].text;
     return res.json({ success: true, reply });
 
   } catch (error) {

@@ -1022,9 +1022,11 @@ router.get('/connection-request/status', async (req, res) => {
 // AI ROUTES
 // ===========================
 
-// Helper: call Gemini API (one-shot)
+// Helper: call Gemini API (with fallback)
 async function callGemini({ systemInstruction, contents, maxTokens = 512, temperature = 0.3, responseSchema = null }) {
   const key = process.env.GEMINI_API_KEY;
+  const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+  
   const body = {
     system_instruction: { parts: [{ text: systemInstruction }] },
     contents,
@@ -1034,13 +1036,27 @@ async function callGemini({ systemInstruction, contents, maxTokens = 512, temper
       ...(responseSchema ? { responseMimeType: 'application/json', responseSchema } : {})
     }
   };
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-  );
-  const data = await response.json();
-  if (!response.ok) throw data;
-  return data.candidates[0].content.parts[0].text;
+
+  let lastError;
+
+  for (const model of models) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      );
+      
+      const data = await response.json();
+      if (!response.ok) throw data;
+      
+      return data.candidates[0].content.parts[0].text;
+    } catch (err) {
+      console.warn(`[AI Fallback] Model ${model} failed. Trying next...`);
+      lastError = err;
+    }
+  }
+
+  throw lastError;
 }
 
 // POST /api/patient/ai/symptom-triage

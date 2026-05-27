@@ -830,6 +830,7 @@ export default function PatientDetailsPage() {
         onClose={() => setRxFormState(prev => ({ ...prev, isOpen: false, step: 1 }))}
         title="Issue Prescription"
         maxWidth="max-w-3xl"
+        message=""
         hideCancel
       >
         <div className="flex flex-col max-h-[75vh] px-2 pb-2">

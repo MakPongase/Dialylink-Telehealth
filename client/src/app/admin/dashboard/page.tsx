@@ -270,7 +270,7 @@ export default function AdminDashboard() {
 
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Today's Overview</h3>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-5 border border-gray-100 rounded-xl flex items-center gap-4 hover:shadow-md transition-shadow">
                     <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
                       <Users className="h-5 w-5" />
@@ -301,15 +301,6 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div className="p-5 border border-gray-100 rounded-xl flex items-center gap-4 hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                      <Calendar className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-2xl font-bold text-gray-900">{stats.consultationsToday}</div>
-                      <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Consultations Today</div>
-                    </div>
-                  </div>
                 </div>
               </div>
 

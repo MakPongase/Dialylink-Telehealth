@@ -126,7 +126,7 @@ export default function PatientDashboard() {
                   onClick={() => setConnectModalOpen(true)}
                   className="text-xs font-bold text-amber-700 bg-white border border-amber-200 hover:bg-amber-100 px-4 py-1.5 rounded-full transition-colors"
                 >
-                  Enter Clinic Code
+                  Enter Connection Code
                 </button>
                 <button 
                   onClick={() => router.push('/patient/find-doctor')}
@@ -322,9 +322,9 @@ export default function PatientDashboard() {
                       <Search className="h-5 w-5 text-gray-400" />
                     </div>
                     <h3 className="font-bold text-gray-900 mb-2">You're not connected to a doctor yet</h3>
-                    <p className="text-sm text-gray-500 mb-5">Find a specialist and connect using their clinic code.</p>
+                    <p className="text-sm text-gray-500 mb-5">Find a specialist and connect using their connection code.</p>
                     <button onClick={() => setConnectModalOpen(true)} className="w-full mb-2 flex justify-center items-center gap-2 bg-teal-600 text-white hover:bg-teal-700 px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors shadow-sm">
-                      Enter Clinic Code
+                      Enter Connection Code
                     </button>
                     <button onClick={() => router.push('/patient/find-doctor')} className="w-full flex justify-center items-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors shadow-sm">
                       Browse Directory

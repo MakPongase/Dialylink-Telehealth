@@ -13,7 +13,16 @@ export async function getProvinces(): Promise<LocationItem[]> {
     const res = await fetch(`${PSGC_BASE_URL}/provinces`);
     if (!res.ok) throw new Error('Failed to fetch provinces');
     const data = await res.json();
-    return data.sort((a: LocationItem, b: LocationItem) => a.name.localeCompare(b.name));
+    
+    // Inject Metro Manila (NCR) as a pseudo-province for UX
+    const ncr = {
+      code: '130000000',
+      name: 'Metro Manila',
+      regionCode: '130000000',
+    };
+    
+    const allProvinces = [...data, ncr];
+    return allProvinces.sort((a: LocationItem, b: LocationItem) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error('Error fetching provinces:', error);
     return [];
@@ -23,8 +32,13 @@ export async function getProvinces(): Promise<LocationItem[]> {
 export async function getCities(provinceCode: string): Promise<LocationItem[]> {
   if (!provinceCode) return [];
   try {
-    // PSGC API supports /provinces/:code/cities-municipalities
-    const res = await fetch(`${PSGC_BASE_URL}/provinces/${provinceCode}/cities-municipalities`);
+    // If Metro Manila (130000000), fetch from regions endpoint
+    const isNCR = provinceCode === '130000000';
+    const endpoint = isNCR 
+      ? `${PSGC_BASE_URL}/regions/${provinceCode}/cities-municipalities`
+      : `${PSGC_BASE_URL}/provinces/${provinceCode}/cities-municipalities`;
+      
+    const res = await fetch(endpoint);
     if (!res.ok) throw new Error('Failed to fetch cities');
     const data = await res.json();
     return data.sort((a: LocationItem, b: LocationItem) => a.name.localeCompare(b.name));

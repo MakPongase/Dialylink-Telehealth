@@ -11,6 +11,8 @@ export default function DoctorSettings() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [initialSettings, setInitialSettings] = useState({ isListed: true, acceptingPatients: true });
 
   const [isListed, setIsListed] = useState(true);
   const [acceptingPatients, setAcceptingPatients] = useState(true);
@@ -23,8 +25,11 @@ export default function DoctorSettings() {
     try {
       const res = await api.get('/api/doctor/settings');
       if (res.data.success) {
-        setIsListed(res.data.data.is_listed ?? true);
-        setAcceptingPatients(res.data.data.accepting_patients ?? true);
+        const isL = res.data.data.is_listed ?? true;
+        const accP = res.data.data.accepting_patients ?? true;
+        setIsListed(isL);
+        setAcceptingPatients(accP);
+        setInitialSettings({ isListed: isL, acceptingPatients: accP });
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -41,6 +46,8 @@ export default function DoctorSettings() {
       const res = await api.patch('/api/doctor/settings', { is_listed: isListed, accepting_patients: acceptingPatients });
       if (res.data.success) {
         setSaved(true);
+        setIsEditing(false);
+        setInitialSettings({ isListed, acceptingPatients });
         setTimeout(() => setSaved(false), 3000);
       } else {
         setError(res.data.message || 'Failed to save settings.');
@@ -50,6 +57,13 @@ export default function DoctorSettings() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    setIsListed(initialSettings.isListed);
+    setAcceptingPatients(initialSettings.acceptingPatients);
+    setIsEditing(false);
+    setError('');
   };
 
   return (
@@ -118,9 +132,10 @@ export default function DoctorSettings() {
                       <button
                         id="toggle-is-listed"
                         onClick={() => setIsListed(!isListed)}
+                        disabled={!isEditing}
                         className={`relative shrink-0 inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                          isListed ? 'bg-teal-500' : 'bg-gray-200'
-                        }`}
+                          isListed ? 'bg-teal-500' : 'bg-gray-300'
+                        } ${!isEditing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <span
                           className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
@@ -152,9 +167,10 @@ export default function DoctorSettings() {
                       <button
                         id="toggle-accepting-patients"
                         onClick={() => setAcceptingPatients(!acceptingPatients)}
+                        disabled={!isEditing}
                         className={`relative shrink-0 inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                          acceptingPatients ? 'bg-teal-500' : 'bg-gray-200'
-                        }`}
+                          acceptingPatients ? 'bg-teal-500' : 'bg-gray-300'
+                        } ${!isEditing ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <span
                           className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
@@ -164,30 +180,48 @@ export default function DoctorSettings() {
                       </button>
                     </div>
 
-                    {/* Save button */}
-                    <div className="flex justify-end pt-2">
-                      <button
-                        id="btn-save-settings"
-                        onClick={handleSave}
-                        disabled={saving}
-                        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm ${
-                          saved
-                            ? 'bg-teal-500 text-white'
-                            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                        } disabled:opacity-60`}
-                      >
-                        {saved ? (
-                          <>
-                            <CheckCircle2 className="h-4 w-4" />
-                            Saved!
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-4 w-4" />
-                            {saving ? 'Saving...' : 'Save Settings'}
-                          </>
-                        )}
-                      </button>
+                    {/* Action buttons */}
+                    <div className="flex justify-end pt-2 gap-3">
+                      {isEditing ? (
+                        <>
+                          <button
+                            onClick={handleCancel}
+                            disabled={saving}
+                            className="px-6 py-2.5 rounded-xl font-bold text-sm bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-60 transition-colors shadow-sm"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            id="btn-save-settings"
+                            onClick={handleSave}
+                            disabled={saving}
+                            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm ${
+                              saved
+                                ? 'bg-teal-500 text-white'
+                                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                            } disabled:opacity-60`}
+                          >
+                            {saved ? (
+                              <>
+                                <CheckCircle2 className="h-4 w-4" />
+                                Saved!
+                              </>
+                            ) : (
+                              <>
+                                <Save className="h-4 w-4" />
+                                {saving ? 'Saving...' : 'Save Settings'}
+                              </>
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setIsEditing(true)}
+                          className="flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-sm"
+                        >
+                          Edit Settings
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

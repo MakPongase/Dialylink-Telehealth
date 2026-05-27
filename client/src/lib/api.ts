@@ -17,7 +17,6 @@ api.interceptors.request.use((config) => {
       if (config.headers && typeof config.headers.set === 'function') {
         config.headers.set('Authorization', `Bearer ${token}`);
       } else {
-        // @ts-expect-error
         config.headers['Authorization'] = `Bearer ${token}`;
       }
     }

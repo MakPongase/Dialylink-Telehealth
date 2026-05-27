@@ -24,7 +24,9 @@ export default function StepIndicator({ steps, currentStep, maxVisitedStep, onSt
         <div className="absolute top-4 left-12 right-12 h-[2px] bg-gray-200 -translate-y-1/2 z-0 rounded-full"></div>
         <div 
           className="absolute top-4 left-12 h-[2px] bg-blue-600 -translate-y-1/2 z-0 transition-all duration-500 ease-in-out rounded-full"
-          style={{ width: `calc(${((Math.max(1, currentStep) - 1) / (steps.length - 1)) * 100}% - 96px)` }}
+          style={{ 
+            width: `calc(${((Math.max(1, currentStep) - 1) / (steps.length - 1)) * 100}% - ${((Math.max(1, currentStep) - 1) / (steps.length - 1)) * 96}px)` 
+          }}
         ></div>
 
         {steps.map((step) => {
@@ -51,7 +53,7 @@ export default function StepIndicator({ steps, currentStep, maxVisitedStep, onSt
                 {isCompleted ? <Check className="h-4 w-4 stroke-[3]" /> : step.number}
               </button>
               
-              <span className={`text-[10px] font-bold mt-3 transition-colors uppercase tracking-wider text-center
+              <span className={`whitespace-nowrap text-[10px] font-bold mt-3 transition-colors uppercase tracking-wider text-center
                 ${isActive ? 'text-blue-700' : isCompleted ? 'text-blue-600/70' : 'text-gray-400'}
               `}>
                 {step.label}

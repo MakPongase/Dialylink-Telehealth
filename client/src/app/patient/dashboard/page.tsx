@@ -386,8 +386,7 @@ export default function PatientDashboard() {
                 type="text"
                 placeholder="e.g. A1B2C3"
                 value={connectionCode}
-                onChange={e => setConnectionCode(e.target.value.toUpperCase())}
-                maxLength={6}
+                onChange={e => setConnectionCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6))}
                 className="w-full border border-gray-300 rounded-lg p-3 text-center text-2xl font-bold tracking-[0.5em] focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 uppercase"
                 disabled={isConnecting}
               />

@@ -320,9 +320,8 @@ export default function FindDoctorPage() {
               <input 
                 type="text" 
                 value={connectionCode}
-                onChange={e => setConnectionCode(e.target.value.toUpperCase())}
+                onChange={e => setConnectionCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 6))}
                 placeholder="E.g. A1B2C3" 
-                maxLength={6}
                 disabled={isConnecting}
                 className="w-full text-center tracking-[0.5em] font-mono text-2xl uppercase px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
               />

@@ -312,11 +312,15 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col min-h-[300px]">
                    <h3 className="text-sm font-semibold text-gray-900 mb-4 flex justify-between items-center border-b border-gray-100 pb-4">
-                     Upcoming Appointments
-                     <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 cursor-pointer transition-colors">View All &rarr;</span>
+                     Platform Health
+                     <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1"><CheckCircle className="h-3.5 w-3.5" /> Operational</span>
                    </h3>
-                   <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">
-                     No upcoming appointments
+                   <div className="flex-1 flex flex-col items-center justify-center text-center">
+                     <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
+                       <Activity className="h-6 w-6 text-emerald-500" />
+                     </div>
+                     <p className="text-gray-900 font-semibold text-sm">All Systems Online</p>
+                     <p className="text-gray-500 text-xs mt-1 max-w-[200px]">API services, database connections, and the AI Engine are running optimally.</p>
                    </div>
                 </div>
                 

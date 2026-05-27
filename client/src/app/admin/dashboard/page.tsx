@@ -26,6 +26,10 @@ export default function AdminDashboard() {
   const [allPatients, setAllPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
   // Reject Modal State
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -198,6 +202,11 @@ export default function AdminDashboard() {
       {label}
     </button>
   );
+
+  // Pagination Derived State
+  const activeList = userDirTab === 'doctors' ? allDoctors : allPatients;
+  const totalPages = Math.ceil(activeList.length / itemsPerPage);
+  const paginatedList = activeList.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden text-gray-900 selection:bg-blue-100">
@@ -439,13 +448,13 @@ export default function AdminDashboard() {
 
                 <div className="bg-gray-100 p-1 rounded-lg flex gap-1">
                   <button 
-                    onClick={() => setUserDirTab('doctors')}
+                    onClick={() => { setUserDirTab('doctors'); setCurrentPage(1); }}
                     className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${userDirTab === 'doctors' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-800'}`}
                   >
                     Doctors
                   </button>
                   <button 
-                    onClick={() => setUserDirTab('patients')}
+                    onClick={() => { setUserDirTab('patients'); setCurrentPage(1); }}
                     className={`px-4 py-1.5 text-xs font-semibold rounded-md transition-all ${userDirTab === 'patients' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-800'}`}
                   >
                     Patients
@@ -466,7 +475,7 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {(userDirTab === 'doctors' ? allDoctors : allPatients).map(user => (
+                      {paginatedList.map(user => (
                         <tr key={user.user_id} className={`hover:bg-gray-50/50 transition-colors ${user.is_suspended ? 'opacity-60' : ''}`}>
                           <td className="px-6 py-4 font-semibold text-gray-900 flex items-center gap-2">
                             {user.is_suspended && <Ban className="h-3.5 w-3.5 text-red-500" />}
@@ -508,10 +517,34 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
-                {((userDirTab === 'doctors' && allDoctors.length === 0) || (userDirTab === 'patients' && allPatients.length === 0)) && (
+                {activeList.length === 0 ? (
                   <div className="p-12 text-center text-gray-400 text-sm font-medium">
                     No records found.
                   </div>
+                ) : (
+                  totalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                      <span className="text-xs text-gray-500 font-medium">
+                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, activeList.length)} of {activeList.length} entries
+                      </span>
+                      <div className="flex gap-2">
+                        <button 
+                          disabled={currentPage === 1}
+                          onClick={() => setCurrentPage(prev => prev - 1)}
+                          className="px-3 py-1.5 rounded-md text-xs font-semibold bg-white border border-gray-200 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                          Previous
+                        </button>
+                        <button 
+                          disabled={currentPage === totalPages}
+                          onClick={() => setCurrentPage(prev => prev + 1)}
+                          className="px-3 py-1.5 rounded-md text-xs font-semibold bg-white border border-gray-200 text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )
                 )}
               </div>
             </div>

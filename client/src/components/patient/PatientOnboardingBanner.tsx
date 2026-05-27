@@ -129,7 +129,7 @@ export function PatientOnboardingBanner({ data, onComplete }: OnboardingProps) {
           </div>
           {!hasSession && (
             <button
-              onClick={() => document.dispatchEvent(new CustomEvent('open-health-companion'))}
+              onClick={() => router.push('/patient/monitoring')}
               className="shrink-0 text-xs font-bold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-full transition-colors shadow-sm"
             >
               Log a Session &rarr;

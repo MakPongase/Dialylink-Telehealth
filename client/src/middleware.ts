@@ -9,9 +9,14 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin');
+  const path = request.nextUrl.pathname;
+  
+  const isAdminRoute = path.startsWith('/admin');
+  const isDoctorRoute = path.startsWith('/doctor');
+  const isPatientRoute = path.startsWith('/patient');
 
-  if (isAdminRoute) {
+  // If it's a protected route
+  if (isAdminRoute || isDoctorRoute || isPatientRoute) {
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
@@ -22,13 +27,15 @@ export function middleware(request: NextRequest) {
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const payload = JSON.parse(atob(base64));
 
-      if (payload.role !== 'admin') {
-        // Redirect non-admins to their respective dashboards
-        if (payload.role === 'doctor') {
-          return NextResponse.redirect(new URL('/doctor/dashboard', request.url));
-        } else {
-          return NextResponse.redirect(new URL('/patient/dashboard', request.url));
-        }
+      // Check role authorization
+      if (isAdminRoute && payload.role !== 'admin') {
+        return NextResponse.redirect(new URL(`/${payload.role}/dashboard`, request.url));
+      }
+      if (isDoctorRoute && payload.role !== 'doctor') {
+        return NextResponse.redirect(new URL(`/${payload.role}/dashboard`, request.url));
+      }
+      if (isPatientRoute && payload.role !== 'patient') {
+        return NextResponse.redirect(new URL(`/${payload.role}/dashboard`, request.url));
       }
     } catch (error) {
       // Invalid token format
@@ -40,5 +47,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/admin/:path*', '/doctor/:path*', '/patient/:path*'],
 };

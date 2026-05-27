@@ -42,7 +42,7 @@ export default function StepIndicator({ steps, currentStep, maxVisitedStep, onSt
           const isClickable = isVisited && step.number !== currentStep;
 
           return (
-            <div key={step.number} className="flex flex-col items-center z-10 w-16 sm:w-24">
+            <div key={step.number} className="relative flex flex-col items-center z-10 w-16 sm:w-24">
               <button
                 type="button"
                 disabled={!isClickable}

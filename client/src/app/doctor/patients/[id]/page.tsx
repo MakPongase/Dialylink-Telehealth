@@ -66,6 +66,7 @@ export default function PatientDetailsPage() {
   const [patientData, setPatientData] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('sessions');
   const [doctorNotes, setDoctorNotes] = useState('');
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
 
   // Alerts
   const [scheduleState, setScheduleState] = useState({
@@ -128,6 +129,7 @@ export default function PatientDetailsPage() {
       const res = await api.put(`/api/doctor/patients/${id}/notes`, { notes: doctorNotes });
       if (res.data.success) {
         setAlertState({ isOpen: true, title: 'Saved', message: 'Doctor notes updated successfully.', type: 'success' });
+        setIsEditingNotes(false);
       }
     } catch (error) {
       console.error(error);
@@ -580,36 +582,60 @@ export default function PatientDetailsPage() {
 
              {/* DOCTOR NOTES TAB */}
              {activeTab === 'notes' && (
-                <div className="p-8 flex flex-col h-[600px] bg-white rounded-b-xl border-t-0">
+                <div className="p-8 flex flex-col min-h-[500px] bg-white rounded-b-xl border-t-0 shadow-sm border border-gray-100">
                   <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
                     <div>
                       <h3 className="text-lg font-bold text-gray-900">Clinical Notes</h3>
                       <p className="text-sm text-gray-500 mt-1">Private observations and treatment plans. Not visible to the patient.</p>
                     </div>
-                    <button onClick={saveDoctorNotes} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95">
-                      <Check className="h-4 w-4" /> Save Notes
-                    </button>
+                    {isEditingNotes ? (
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => {
+                          setIsEditingNotes(false);
+                          setDoctorNotes(patientData?.profile?.doctor_notes || '');
+                        }} className="px-4 py-2 text-gray-500 hover:bg-gray-100 font-semibold text-sm rounded-lg transition-colors">
+                          Cancel
+                        </button>
+                        <button onClick={saveDoctorNotes} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center gap-2">
+                          <Check className="h-4 w-4" /> Save Notes
+                        </button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setIsEditingNotes(true)} className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold rounded-lg transition-all flex items-center gap-2">
+                        <Edit3 className="h-4 w-4" /> {doctorNotes ? 'Edit Notes' : 'Add Note'}
+                      </button>
+                    )}
                   </div>
                   
-                  <div className="flex-1 relative rounded-xl border border-gray-200 bg-[#fbfbfb] overflow-hidden group focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent focus-within:bg-white transition-all shadow-inner">
-                    {/* Red vertical margin line */}
-                    <div className="absolute top-0 bottom-0 left-12 w-0.5 bg-red-200/60 z-0 pointer-events-none"></div>
-                    
+                  {isEditingNotes ? (
                     <textarea
-                      className="absolute inset-0 w-full h-full p-8 pl-16 text-gray-800 text-base resize-none outline-none z-10 bg-transparent"
-                      style={{
-                        lineHeight: '32px',
-                        backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, #e2e8f0 31px, #e2e8f0 32px)',
-                        backgroundAttachment: 'local',
-                        backgroundPosition: '0 8px'
-                      }}
-                      placeholder="Begin typing clinical observations..."
+                      className="flex-1 w-full border border-gray-200 rounded-xl p-6 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none shadow-sm bg-gray-50/50 leading-relaxed transition-all"
+                      placeholder="Enter clinical observations, treatment plans, and private notes here..."
                       value={doctorNotes}
                       onChange={(e) => setDoctorNotes(e.target.value)}
                     />
-                  </div>
+                  ) : (
+                    <div className="flex-1 overflow-y-auto">
+                      {doctorNotes ? (
+                        <div className="prose max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed text-base">
+                          {doctorNotes}
+                        </div>
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-center py-12">
+                          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
+                            <FileText className="h-8 w-8 text-gray-300" />
+                          </div>
+                          <h4 className="text-gray-900 font-bold mb-1">No notes added yet</h4>
+                          <p className="text-sm text-gray-500 mb-6">Start documenting private observations for this patient.</p>
+                          <button onClick={() => setIsEditingNotes(true)} className="text-sm font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-5 py-2.5 rounded-lg transition-colors">
+                            + Add Note
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
-                  <div className="mt-4 flex justify-between items-center text-xs font-semibold text-gray-400">
+                  <div className="mt-6 flex justify-between items-center text-xs font-semibold text-gray-400">
                     <span>Automatically encrypted & secured</span>
                     <span>Last updated: {new Date().toLocaleDateString()}</span>
                   </div>

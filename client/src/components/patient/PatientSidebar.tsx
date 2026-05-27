@@ -78,7 +78,7 @@ export function PatientSidebar({ activeItem }: PatientSidebarProps) {
     <>
       <div className="p-6 border-b border-gray-100 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <HeartPulse className="h-6 w-6 text-teal-600" />
+          <Activity className="h-6 w-6 text-teal-600" />
           <span className="text-lg font-bold tracking-tight text-gray-900">
             DialyLink
             <span className="text-[9px] bg-teal-100 text-teal-700 px-1.5 py-0.5 rounded font-bold uppercase ml-2 align-middle">

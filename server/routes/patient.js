@@ -1031,7 +1031,7 @@ async function callGemini({ systemInstruction, contents, maxTokens = 512, temper
     generationConfig: {
       maxOutputTokens: maxTokens,
       temperature,
-      ...(responseSchema ? { responseMimeType: 'application/json' } : {})
+      ...(responseSchema ? { responseMimeType: 'application/json', responseSchema } : {})
     }
   };
   const response = await fetch(
@@ -1117,7 +1117,19 @@ Settings to use:
       systemInstruction,
       contents: [{ role: 'user', parts: [{ text: symptoms_description.trim() }] }],
       maxTokens: 800,
-      temperature: 0.2
+      temperature: 0.2,
+      responseSchema: {
+        type: 'object',
+        properties: {
+          explanation: { type: 'string' },
+          recommended_specializations: {
+            type: 'array',
+            items: { type: 'string' }
+          },
+          reason: { type: 'string' }
+        },
+        required: ['explanation', 'recommended_specializations', 'reason']
+      }
     });
 
     // Strip markdown fences, then try to extract a JSON object from the response

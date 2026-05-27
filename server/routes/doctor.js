@@ -133,8 +133,7 @@ router.get('/patients/:id', async (req, res) => {
     const sessionsRes = await pool.query(
       `SELECT * FROM dialysis_sessions 
        WHERE patient_id = $1 
-       ORDER BY session_date DESC, logged_at DESC 
-       LIMIT 5`,
+       ORDER BY session_date DESC, logged_at DESC`,
       [patientProfileId]
     );
 
@@ -214,6 +213,76 @@ router.put('/patients/:id/notes', async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error updating doctor notes.' });
   }
 });
+
+// POST /patients/:id/sessions  — doctor logs a session on behalf of a patient
+router.post('/patients/:id/sessions', async (req, res) => {
+  const patientProfileId = req.params.id;
+  const {
+    session_date, bp_before, bp_after, weight_before, weight_after,
+    fluid_intake_ml, duration_minutes, symptoms, notes, dialysis_type,
+    blood_flow_rate, access_site, ultrafiltration_volume,
+    num_exchanges, dwell_time_hours, fill_volume_ml, drain_volume_ml,
+    dialysate_glucose_percent, effluent_appearance
+  } = req.body;
+
+  try {
+    // Verify this patient belongs to this doctor
+    const docProfileRes = await pool.query('SELECT id FROM doctor_profiles WHERE user_id = $1', [req.user.id]);
+    if (docProfileRes.rowCount === 0) return res.status(403).json({ success: false, message: 'Doctor profile not found.' });
+    const doctorProfileId = docProfileRes.rows[0].id;
+
+    const ownerCheck = await pool.query(
+      'SELECT id FROM patient_profiles WHERE id = $1 AND connected_doctor_id = $2',
+      [patientProfileId, doctorProfileId]
+    );
+    if (ownerCheck.rowCount === 0) return res.status(403).json({ success: false, message: 'Patient not connected to this doctor.' });
+
+    const dtype = dialysis_type === 'peritoneal' ? 'peritoneal' : 'hemodialysis';
+
+    // Calculate IDWG from previous session
+    let idwg_kg = null;
+    const prevSessionRes = await pool.query(
+      `SELECT weight_after FROM dialysis_sessions WHERE patient_id = $1 ORDER BY session_date DESC, logged_at DESC LIMIT 1`,
+      [patientProfileId]
+    );
+    if (prevSessionRes.rowCount > 0 && prevSessionRes.rows[0].weight_after) {
+      const prev = parseFloat(prevSessionRes.rows[0].weight_after);
+      const curr = parseFloat(weight_before);
+      if (!isNaN(prev) && !isNaN(curr)) idwg_kg = (curr - prev).toFixed(2);
+    }
+
+    const insertRes = await pool.query(
+      `INSERT INTO dialysis_sessions 
+       (patient_id, session_date, bp_before, bp_after, weight_before, weight_after, fluid_intake_ml, duration_minutes, symptoms, notes,
+        dialysis_type, blood_flow_rate, access_site, ultrafiltration_volume, num_exchanges, dwell_time_hours, fill_volume_ml, drain_volume_ml, dialysate_glucose_percent, effluent_appearance, idwg_kg)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+               $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
+      [
+        patientProfileId,
+        session_date || new Date().toISOString().split('T')[0],
+        bp_before, bp_after, weight_before, weight_after, fluid_intake_ml, duration_minutes,
+        symptoms || [], notes, dtype,
+        dtype === 'hemodialysis' ? blood_flow_rate : null,
+        dtype === 'hemodialysis' ? access_site : null,
+        dtype === 'hemodialysis' ? ultrafiltration_volume : null,
+        dtype === 'peritoneal' ? num_exchanges : null,
+        dtype === 'peritoneal' ? dwell_time_hours : null,
+        dtype === 'peritoneal' ? fill_volume_ml : null,
+        dtype === 'peritoneal' ? drain_volume_ml : null,
+        dtype === 'peritoneal' ? dialysate_glucose_percent : null,
+        dtype === 'peritoneal' ? effluent_appearance : null,
+        idwg_kg
+      ]
+    );
+
+    return res.json({ success: true, data: insertRes.rows[0], message: 'Session logged successfully.' });
+
+  } catch (error) {
+    console.error('Error logging session for patient:', error);
+    return res.status(500).json({ success: false, message: 'Server error logging session.' });
+  }
+});
+
 
 // GET /connection-code
 router.get('/connection-code', async (req, res) => {

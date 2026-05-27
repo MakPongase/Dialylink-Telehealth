@@ -69,6 +69,18 @@ export default function PatientDetailsPage() {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [sessionPage, setSessionPage] = useState(1);
   const sessionsPerPage = 5;
+  const [logSessionState, setLogSessionState] = useState({
+    isOpen: false,
+    isSubmitting: false,
+    session_date: new Date().toISOString().split('T')[0],
+    dialysis_type: 'hemodialysis',
+    bp_before: '', bp_after: '',
+    weight_before: '', weight_after: '',
+    duration_minutes: '240',
+    fluid_intake_ml: '',
+    notes: '',
+    access_site: '', blood_flow_rate: '', ultrafiltration_volume: ''
+  });
 
   // Alerts
   const [scheduleState, setScheduleState] = useState({
@@ -135,6 +147,29 @@ export default function PatientDetailsPage() {
       }
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleLogSession = async () => {
+    setLogSessionState(prev => ({ ...prev, isSubmitting: true }));
+    try {
+      const { session_date, dialysis_type, bp_before, bp_after, weight_before, weight_after, duration_minutes, fluid_intake_ml, notes, access_site, blood_flow_rate, ultrafiltration_volume } = logSessionState;
+      const res = await api.post(`/api/doctor/patients/${id}/sessions`, {
+        session_date, dialysis_type, bp_before, bp_after,
+        weight_before: weight_before ? parseFloat(weight_before) : null,
+        weight_after: weight_after ? parseFloat(weight_after) : null,
+        duration_minutes: duration_minutes ? parseInt(duration_minutes) : null,
+        fluid_intake_ml: fluid_intake_ml ? parseInt(fluid_intake_ml) : null,
+        notes, access_site, blood_flow_rate, ultrafiltration_volume
+      });
+      if (res.data.success) {
+        setLogSessionState(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
+        setAlertState({ isOpen: true, type: 'success', title: 'Session Logged', message: 'Dialysis session recorded successfully.' });
+        fetchPatientDetails();
+      }
+    } catch (err) {
+      console.error(err);
+      setLogSessionState(prev => ({ ...prev, isSubmitting: false }));
     }
   };
 
@@ -350,6 +385,15 @@ export default function PatientDetailsPage() {
              {/* SESSIONS TAB */}
              {activeTab === 'sessions' && (
                 <div className="overflow-x-auto">
+                  <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100 bg-white">
+                    <span className="text-sm font-semibold text-gray-600">{sessions.length} session{sessions.length !== 1 ? 's' : ''} recorded</span>
+                    <button
+                      onClick={() => setLogSessionState(prev => ({ ...prev, isOpen: true }))}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-sm"
+                    >
+                      <Activity className="h-4 w-4" /> Log Session
+                    </button>
+                  </div>
                   <table className="w-full text-left text-sm border-collapse">
                     <thead>
                       <tr className="bg-white border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
@@ -674,6 +718,116 @@ export default function PatientDetailsPage() {
         </main>
       </div>
 
+      {/* Log Session Modal */}
+      <Modal
+        isOpen={logSessionState.isOpen}
+        onClose={() => setLogSessionState(prev => ({ ...prev, isOpen: false }))}
+        title="Log Dialysis Session"
+        hideCancel
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Session Date</label>
+              <input type="date" value={logSessionState.session_date}
+                onChange={e => setLogSessionState(prev => ({ ...prev, session_date: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
+              <select value={logSessionState.dialysis_type}
+                onChange={e => setLogSessionState(prev => ({ ...prev, dialysis_type: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
+                <option value="hemodialysis">Hemodialysis (HD)</option>
+                <option value="peritoneal">Peritoneal Dialysis (PD)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">BP Before (e.g. 130/85)</label>
+              <input type="text" placeholder="e.g. 130/85" value={logSessionState.bp_before}
+                onChange={e => setLogSessionState(prev => ({ ...prev, bp_before: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">BP After</label>
+              <input type="text" placeholder="e.g. 120/80" value={logSessionState.bp_after}
+                onChange={e => setLogSessionState(prev => ({ ...prev, bp_after: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Weight Before (kg)</label>
+              <input type="number" step="0.1" placeholder="e.g. 73.5" value={logSessionState.weight_before}
+                onChange={e => setLogSessionState(prev => ({ ...prev, weight_before: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Weight After (kg)</label>
+              <input type="number" step="0.1" placeholder="e.g. 71.2" value={logSessionState.weight_after}
+                onChange={e => setLogSessionState(prev => ({ ...prev, weight_after: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Duration (minutes)</label>
+              <input type="number" placeholder="240" value={logSessionState.duration_minutes}
+                onChange={e => setLogSessionState(prev => ({ ...prev, duration_minutes: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Fluid Intake (mL)</label>
+              <input type="number" placeholder="optional" value={logSessionState.fluid_intake_ml}
+                onChange={e => setLogSessionState(prev => ({ ...prev, fluid_intake_ml: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+            </div>
+          </div>
+
+          {logSessionState.dialysis_type === 'hemodialysis' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Access Site</label>
+                <input type="text" placeholder="e.g. AV Fistula (Left arm)" value={logSessionState.access_site}
+                  onChange={e => setLogSessionState(prev => ({ ...prev, access_site: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Blood Flow Rate (mL/min)</label>
+                <input type="number" placeholder="e.g. 300" value={logSessionState.blood_flow_rate}
+                  onChange={e => setLogSessionState(prev => ({ ...prev, blood_flow_rate: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Notes</label>
+            <textarea placeholder="Clinical observations from this session..." value={logSessionState.notes}
+              onChange={e => setLogSessionState(prev => ({ ...prev, notes: e.target.value }))}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" />
+          </div>
+
+          <div className="pt-2 flex justify-end gap-3">
+            <button onClick={() => setLogSessionState(prev => ({ ...prev, isOpen: false }))}
+              className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+              Cancel
+            </button>
+            <button onClick={handleLogSession} disabled={logSessionState.isSubmitting}
+              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2">
+              <Activity className="h-4 w-4" />
+              {logSessionState.isSubmitting ? 'Logging...' : 'Log Session'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Schedule Modal */}
       <Modal 
         isOpen={scheduleState.isOpen}
@@ -681,6 +835,7 @@ export default function PatientDetailsPage() {
         title="Schedule Appointment"
         hideCancel
       >
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1">Date</label>

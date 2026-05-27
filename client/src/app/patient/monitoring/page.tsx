@@ -289,6 +289,7 @@ export default function MonitoringPage() {
                             <th className="px-6 py-4">Type</th>
                             <th className="px-6 py-4">BP (Pre &rarr; Post)</th>
                             <th className="px-6 py-4">Weight (Pre &rarr; Post)</th>
+                            <th className="px-6 py-4">IDWG</th>
                             <th className="px-6 py-4">Duration</th>
                             <th className="px-6 py-4">Symptoms</th>
                             <th className="px-6 py-4">Logged By</th>

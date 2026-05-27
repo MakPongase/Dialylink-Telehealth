@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { 
   LayoutDashboard, Users, Calendar, LogOut, 
   Activity, MessageSquare, UserPlus, Bot, Settings,
@@ -55,8 +56,9 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
   };
 
   const NavItem = ({ id, icon: Icon, label, route, badge }: { id: string, icon: any, label: string, route: string, badge?: number }) => (
-    <button
-      onClick={() => navigate(route)}
+    <Link
+      href={route}
+      onClick={() => setIsOpen(false)}
       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
         activeItem === id 
           ? 'bg-blue-50/50 text-blue-700' 
@@ -70,7 +72,7 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
           {badge}
         </span>
       )}
-    </button>
+    </Link>
   );
 
   const SidebarContent = () => (

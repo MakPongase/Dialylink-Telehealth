@@ -101,7 +101,7 @@ export default function AppointmentsPage() {
   };
 
   // ── time slot generation
-  const timeSlotsForDate = useCallback((date: Date): string[] => {
+  const timeSlotsForDate = useCallback((date: Date): { timeStr: string, isBooked: boolean }[] => {
     const dateStr = toLocalDateStr(date);
     if (blockedDates.includes(dateStr)) return [];
     

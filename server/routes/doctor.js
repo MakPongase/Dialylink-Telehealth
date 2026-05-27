@@ -1007,7 +1007,7 @@ Never speculate beyond what the data shows.`;
 
     // Call Gemini API
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1015,7 +1015,7 @@ Never speculate beyond what the data shows.`;
           system_instruction: { parts: [{ text: systemInstruction }] },
           contents: messages,
           generationConfig: {
-            maxOutputTokens: 512,
+            maxOutputTokens: 800,
             temperature: 0.3
           }
         })
@@ -1025,7 +1025,11 @@ Never speculate beyond what the data shows.`;
     const data = await response.json();
     if (!response.ok) {
       console.error('Gemini API Error:', data);
-      return res.status(503).json({ success: false, message: 'AI service unavailable. Try again.' });
+      let errorMessage = 'AI service unavailable. Try again.';
+      if (data && data.error && data.error.message) {
+        errorMessage = data.error.message;
+      }
+      return res.status(503).json({ success: false, message: errorMessage });
     }
 
     const reply = data.candidates[0].content.parts[0].text;

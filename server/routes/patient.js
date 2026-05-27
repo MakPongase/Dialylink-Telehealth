@@ -1035,7 +1035,7 @@ async function callGemini({ systemInstruction, contents, maxTokens = 512, temper
     }
   };
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
   );
   const data = await response.json();
@@ -1116,7 +1116,7 @@ Settings to use:
     const raw = await callGemini({
       systemInstruction,
       contents: [{ role: 'user', parts: [{ text: symptoms_description.trim() }] }],
-      maxTokens: 300,
+      maxTokens: 800,
       temperature: 0.2
     });
 
@@ -1135,7 +1135,17 @@ Settings to use:
     });
   } catch (error) {
     console.error('Symptom triage error:', error);
-    return res.status(500).json({ success: false, message: 'Could not analyze symptoms. Please try again.' });
+    
+    let errorMessage = 'Could not analyze symptoms. Please try again.';
+    
+    // Check if it's an API error returned by Gemini
+    if (error && error.error && error.error.message) {
+      errorMessage = error.error.message;
+    } else if (error instanceof SyntaxError) {
+      errorMessage = 'The AI returned an invalid response format. Please try again.';
+    }
+
+    return res.status(503).json({ success: false, message: errorMessage });
   }
 });
 
@@ -1304,14 +1314,18 @@ Settings:
     const reply = await callGemini({
       systemInstruction,
       contents: messages,
-      maxTokens: 400,
+      maxTokens: 800,
       temperature: 0.65
     });
 
     return res.json({ success: true, reply });
   } catch (error) {
     console.error('Health chat error:', error);
-    return res.status(500).json({ success: false, message: 'AI service unavailable. Please try again.' });
+    let errorMessage = 'AI service unavailable. Please try again.';
+    if (error && error.error && error.error.message) {
+      errorMessage = error.error.message;
+    }
+    return res.status(503).json({ success: false, message: errorMessage });
   }
 });
 

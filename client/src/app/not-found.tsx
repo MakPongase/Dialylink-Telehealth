@@ -35,7 +35,7 @@ export default function NotFound() {
             className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Homepage
+            Return
           </Link>
         </div>
       </div>

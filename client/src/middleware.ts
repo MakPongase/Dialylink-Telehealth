@@ -15,6 +15,20 @@ export function middleware(request: NextRequest) {
   const isDoctorRoute = path.startsWith('/doctor');
   const isPatientRoute = path.startsWith('/patient');
 
+  const isPublicRoute = path === '/' || path === '/login' || path === '/register' || path === '/how-it-works';
+
+  // If user has token and tries to access public page
+  if (token && isPublicRoute) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(atob(base64));
+      return NextResponse.redirect(new URL(`/${payload.role}/dashboard`, request.url));
+    } catch (error) {
+      // Invalid token, ignore and let them view the public page
+    }
+  }
+
   // If it's a protected route
   if (isAdminRoute || isDoctorRoute || isPatientRoute) {
     if (!token) {
@@ -47,5 +61,13 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/doctor/:path*', '/patient/:path*'],
+  matcher: [
+    '/', 
+    '/login', 
+    '/register', 
+    '/how-it-works', 
+    '/admin/:path*', 
+    '/doctor/:path*', 
+    '/patient/:path*'
+  ],
 };

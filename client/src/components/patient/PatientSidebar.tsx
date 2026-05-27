@@ -23,6 +23,20 @@ export function PatientSidebar({ activeItem }: PatientSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  const [hasDoctor, setHasDoctor] = useState(false);
+
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setHasDoctor(!!user.connected_doctor_id);
+      } catch (e) {
+        setHasDoctor(false);
+      }
+    }
+  }, []);
+
   const handleLogout = () => {
     setIsLoggingOut(true);
     setTimeout(() => {
@@ -79,16 +93,18 @@ export function PatientSidebar({ activeItem }: PatientSidebarProps) {
           <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" route="/patient/dashboard" />
         </div>
 
-        <div className="space-y-1">
-          <h4 className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">My Health</h4>
-          <NavItem id="monitoring" icon={Activity} label="Monitoring Log" route="/patient/monitoring" />
-          <NavItem id="records" icon={FileText} label="Health Records" route="/patient/records" />
-          <NavItem id="appointments" icon={Calendar} label="Appointments" route="/patient/appointments" />
-        </div>
+        {hasDoctor && (
+          <div className="space-y-1">
+            <h4 className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">My Health</h4>
+            <NavItem id="monitoring" icon={Activity} label="Monitoring Log" route="/patient/monitoring" />
+            <NavItem id="records" icon={FileText} label="Health Records" route="/patient/records" />
+            <NavItem id="appointments" icon={Calendar} label="Appointments" route="/patient/appointments" />
+          </div>
+        )}
         
         <div className="space-y-1">
           <h4 className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Communication</h4>
-          <NavItem id="chat" icon={MessageSquare} label="Chat" route="/patient/chat" />
+          {hasDoctor && <NavItem id="chat" icon={MessageSquare} label="Chat" route="/patient/chat" />}
           <NavItem id="health-companion" icon={Bot} label="Health Companion" route="/patient/health-companion" />
         </div>
 

@@ -152,45 +152,47 @@ export default function PatientDashboard() {
           <div className="max-w-6xl mx-auto w-full space-y-6 animate-in fade-in duration-500">
             
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center gap-2 text-gray-500 mb-2">
-                  <Calendar className="h-4 w-4 text-blue-500" />
-                  <span className="text-xs font-semibold uppercase tracking-wider">Next Appointment</span>
-                </div>
-                {nextAppointment ? (
-                  <div>
-                    <div className="text-lg font-bold text-gray-900">{new Date(nextAppointment.scheduled_at).toLocaleDateString()}</div>
-                    <div className="text-sm text-gray-600 truncate">Dr. {nextAppointment.doctor_name}</div>
+            {connected_doctor && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center gap-2 text-gray-500 mb-2">
+                    <Calendar className="h-4 w-4 text-blue-500" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Next Appointment</span>
                   </div>
-                ) : (
-                  <div className="text-lg font-bold text-gray-400">None scheduled</div>
-                )}
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center gap-2 text-gray-500 mb-2">
-                  <Activity className="h-4 w-4 text-teal-500" />
-                  <span className="text-xs font-semibold uppercase tracking-wider">Last Session</span>
+                  {nextAppointment ? (
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">{new Date(nextAppointment.scheduled_at).toLocaleDateString()}</div>
+                      <div className="text-sm text-gray-600 truncate">Dr. {nextAppointment.doctor_name}</div>
+                    </div>
+                  ) : (
+                    <div className="text-lg font-bold text-gray-400">None scheduled</div>
+                  )}
                 </div>
-                {lastSession ? (
-                  <div>
-                    <div className="text-lg font-bold text-gray-900">{new Date(lastSession.session_date).toLocaleDateString()}</div>
-                    <div className="text-sm text-gray-600">{lastSession.duration_minutes} mins</div>
+
+                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center gap-2 text-gray-500 mb-2">
+                    <Activity className="h-4 w-4 text-teal-500" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Last Session</span>
                   </div>
-                ) : (
-                  <div className="text-lg font-bold text-gray-400">No sessions yet</div>
-                )}
-              </div>
-
-              <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                <div className="flex items-center gap-2 text-gray-500 mb-2">
-                  <FileText className="h-4 w-4 text-emerald-500" />
-                  <span className="text-xs font-semibold uppercase tracking-wider">Active Rx</span>
+                  {lastSession ? (
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">{new Date(lastSession.session_date).toLocaleDateString()}</div>
+                      <div className="text-sm text-gray-600">{lastSession.duration_minutes} mins</div>
+                    </div>
+                  ) : (
+                    <div className="text-lg font-bold text-gray-400">No sessions yet</div>
+                  )}
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{active_prescriptions_count}</div>
+
+                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                  <div className="flex items-center gap-2 text-gray-500 mb-2">
+                    <FileText className="h-4 w-4 text-emerald-500" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Active Rx</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{active_prescriptions_count}</div>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Content Columns */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -199,97 +201,101 @@ export default function PatientDashboard() {
               <div className="lg:col-span-3 space-y-6">
                 
                 {/* Upcoming Appointments */}
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-bold text-gray-900">Upcoming Appointments</h3>
-                    <button onClick={() => router.push('/patient/appointments')} className="text-xs font-semibold text-teal-600 hover:text-teal-700">View all</button>
-                  </div>
-                  <div className="p-0">
-                    {upcoming_appointments && upcoming_appointments.length > 0 ? (
-                      <ul className="divide-y divide-gray-100">
-                        {upcoming_appointments.map((appt: any) => (
-                          <li key={appt.id} className="p-5 hover:bg-gray-50/50 transition-colors flex justify-between items-center">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-bold text-gray-900">
-                                  {new Date(appt.scheduled_at).toLocaleDateString()} at {new Date(appt.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                                  appt.type === 'Consultation' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-teal-50 text-teal-600 border border-teal-100'
-                                }`}>
-                                  {appt.type}
-                                </span>
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                                  {appt.status}
-                                </span>
+                {connected_doctor && (
+                  <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                      <h3 className="font-bold text-gray-900">Upcoming Appointments</h3>
+                      <button onClick={() => router.push('/patient/appointments')} className="text-xs font-semibold text-teal-600 hover:text-teal-700">View all</button>
+                    </div>
+                    <div className="p-0">
+                      {upcoming_appointments && upcoming_appointments.length > 0 ? (
+                        <ul className="divide-y divide-gray-100">
+                          {upcoming_appointments.map((appt: any) => (
+                            <li key={appt.id} className="p-5 hover:bg-gray-50/50 transition-colors flex justify-between items-center">
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-bold text-gray-900">
+                                    {new Date(appt.scheduled_at).toLocaleDateString()} at {new Date(appt.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                    appt.type === 'Consultation' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-teal-50 text-teal-600 border border-teal-100'
+                                  }`}>
+                                    {appt.type}
+                                  </span>
+                                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                    {appt.status}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-500 font-medium">Dr. {appt.doctor_name}</div>
                               </div>
-                              <div className="text-sm text-gray-500 font-medium">Dr. {appt.doctor_name}</div>
-                            </div>
-                            {appt.status === 'confirmed' && appt.type === 'Consultation' && (
-                              <button onClick={() => router.push('/patient/chat')} className="px-4 py-2 bg-blue-50 text-blue-700 font-semibold text-xs rounded-lg hover:bg-blue-100 transition-colors">
-                                Join Chat
-                              </button>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="p-8 text-center text-sm font-medium text-gray-400">No upcoming appointments.</div>
-                    )}
+                              {appt.status === 'confirmed' && appt.type === 'Consultation' && (
+                                <button onClick={() => router.push('/patient/chat')} className="px-4 py-2 bg-blue-50 text-blue-700 font-semibold text-xs rounded-lg hover:bg-blue-100 transition-colors">
+                                  Join Chat
+                                </button>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="p-8 text-center text-sm font-medium text-gray-400">No upcoming appointments.</div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Recent Sessions */}
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-bold text-gray-900">Recent Dialysis Sessions</h3>
-                    <button onClick={() => router.push('/patient/monitoring')} className="text-xs font-semibold text-teal-600 hover:text-teal-700">View all</button>
+                {connected_doctor && (
+                  <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                      <h3 className="font-bold text-gray-900">Recent Dialysis Sessions</h3>
+                      <button onClick={() => router.push('/patient/monitoring')} className="text-xs font-semibold text-teal-600 hover:text-teal-700">View all</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm border-collapse">
+                        <thead>
+                          <tr className="bg-white border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
+                            <th className="px-5 py-3">Date</th>
+                            <th className="px-5 py-3">BP (Pre &rarr; Post)</th>
+                            <th className="px-5 py-3">Weight &Delta;</th>
+                            <th className="px-5 py-3">Symptoms</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {recent_dialysis_sessions && recent_dialysis_sessions.length > 0 ? (
+                            recent_dialysis_sessions.map((s: any) => {
+                              const weightDiff = (parseFloat(s.weight_after) - parseFloat(s.weight_before)).toFixed(1);
+                              const isGain = parseFloat(weightDiff) > 0;
+                              return (
+                                <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
+                                  <td className="px-5 py-4 font-semibold text-gray-900">{new Date(s.session_date).toLocaleDateString()}</td>
+                                  <td className="px-5 py-4 text-gray-600">
+                                    {s.bp_before} &rarr; {s.bp_after}
+                                  </td>
+                                  <td className="px-5 py-4">
+                                    <span className={`font-semibold ${isGain && parseFloat(weightDiff) > 2.0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                      {isGain ? '+' : ''}{weightDiff} kg
+                                    </span>
+                                  </td>
+                                  <td className="px-5 py-4">
+                                    <div className="flex gap-1 flex-wrap">
+                                      {s.symptoms && s.symptoms.length > 0 ? s.symptoms.map((sym: string, i: number) => (
+                                        <span key={i} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
+                                          {sym}
+                                        </span>
+                                      )) : <span className="text-gray-400 italic">None</span>}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr><td colSpan={4} className="px-5 py-8 text-center text-sm font-medium text-gray-400">No sessions logged yet.</td></tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm border-collapse">
-                      <thead>
-                        <tr className="bg-white border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
-                          <th className="px-5 py-3">Date</th>
-                          <th className="px-5 py-3">BP (Pre &rarr; Post)</th>
-                          <th className="px-5 py-3">Weight &Delta;</th>
-                          <th className="px-5 py-3">Symptoms</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {recent_dialysis_sessions && recent_dialysis_sessions.length > 0 ? (
-                          recent_dialysis_sessions.map((s: any) => {
-                            const weightDiff = (parseFloat(s.weight_after) - parseFloat(s.weight_before)).toFixed(1);
-                            const isGain = parseFloat(weightDiff) > 0;
-                            return (
-                              <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
-                                <td className="px-5 py-4 font-semibold text-gray-900">{new Date(s.session_date).toLocaleDateString()}</td>
-                                <td className="px-5 py-4 text-gray-600">
-                                  {s.bp_before} &rarr; {s.bp_after}
-                                </td>
-                                <td className="px-5 py-4">
-                                  <span className={`font-semibold ${isGain && parseFloat(weightDiff) > 2.0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                    {isGain ? '+' : ''}{weightDiff} kg
-                                  </span>
-                                </td>
-                                <td className="px-5 py-4">
-                                  <div className="flex gap-1 flex-wrap">
-                                    {s.symptoms && s.symptoms.length > 0 ? s.symptoms.map((sym: string, i: number) => (
-                                      <span key={i} className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">
-                                        {sym}
-                                      </span>
-                                    )) : <span className="text-gray-400 italic">None</span>}
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        ) : (
-                          <tr><td colSpan={4} className="px-5 py-8 text-center text-sm font-medium text-gray-400">No sessions logged yet.</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                )}
 
               </div>
 
@@ -339,31 +345,33 @@ export default function PatientDashboard() {
                 )}
 
                 {/* Active Prescriptions */}
-                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                  <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="font-bold text-gray-900">Active Prescriptions</h3>
-                    <button onClick={() => router.push('/patient/records')} className="text-xs font-semibold text-teal-600 hover:text-teal-700">View all</button>
+                {connected_doctor && (
+                  <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                      <h3 className="font-bold text-gray-900">Active Prescriptions</h3>
+                      <button onClick={() => router.push('/patient/records')} className="text-xs font-semibold text-teal-600 hover:text-teal-700">View all</button>
+                    </div>
+                    <div className="p-5">
+                      {active_medications && active_medications.length > 0 ? (
+                        <ul className="space-y-3">
+                          {active_medications.slice(0, 3).map((m: any) => (
+                            <li key={m.id} className="flex flex-col border-b border-gray-50 pb-3 last:border-0 last:pb-0">
+                              <span className="font-bold text-gray-900 text-sm">{m.medication_name} {m.dosage}</span>
+                              <span className="text-xs text-gray-500">{m.frequency}</span>
+                            </li>
+                          ))}
+                          {active_medications.length > 3 && (
+                            <li className="text-xs text-gray-400 font-medium pt-1">
+                              + {active_medications.length - 3} more medications
+                            </li>
+                          )}
+                        </ul>
+                      ) : (
+                        <div className="text-center text-sm font-medium text-gray-400 py-2">No active prescriptions.</div>
+                      )}
+                    </div>
                   </div>
-                  <div className="p-5">
-                    {active_medications && active_medications.length > 0 ? (
-                      <ul className="space-y-3">
-                        {active_medications.slice(0, 3).map((m: any) => (
-                          <li key={m.id} className="flex flex-col border-b border-gray-50 pb-3 last:border-0 last:pb-0">
-                            <span className="font-bold text-gray-900 text-sm">{m.medication_name} {m.dosage}</span>
-                            <span className="text-xs text-gray-500">{m.frequency}</span>
-                          </li>
-                        ))}
-                        {active_medications.length > 3 && (
-                          <li className="text-xs text-gray-400 font-medium pt-1">
-                            + {active_medications.length - 3} more medications
-                          </li>
-                        )}
-                      </ul>
-                    ) : (
-                      <div className="text-center text-sm font-medium text-gray-400 py-2">No active prescriptions.</div>
-                    )}
-                  </div>
-                </div>
+                )}
 
 
 

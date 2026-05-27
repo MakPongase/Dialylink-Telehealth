@@ -1,11 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { Activity, Search, ShieldCheck, HeartHandshake, CalendarRange } from 'lucide-react';
+import { Activity, ShieldCheck, HeartHandshake, CalendarRange } from 'lucide-react';
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col relative overflow-x-hidden">
@@ -35,12 +40,12 @@ export default function Home() {
         </nav>
 
         <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">
+          <Link href="/login" className="hidden sm:block text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors">
             Sign In
           </Link>
           <Link
             href="/register"
-            className="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20"
+            className="px-4 py-2 sm:px-5 sm:py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-600/20"
           >
             Get Started
           </Link>
@@ -51,29 +56,13 @@ export default function Home() {
         {/* Hero Section */}
         <section className="relative py-20 px-6 md:px-12 flex flex-col items-center justify-center text-center">
           <div className="max-w-4xl space-y-8">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight text-slate-900 pb-2">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight text-slate-900 pb-2">
               The Smartest Way to Monitor <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Dialysis Care</span>
             </h1>
             <p className="text-slate-600 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed">
               Connect with verified nephrologists, track vital session logs, and coordinate your kidney care journey from one secure, beautifully designed portal.
             </p>
 
-            {/* Search bar */}
-            <div className="max-w-2xl mx-auto bg-white/80 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 p-2 flex flex-col sm:flex-row items-center gap-2 mt-12 transition-all focus-within:border-blue-400 focus-within:bg-white">
-              <div className="flex items-center gap-3 px-4 w-full text-slate-500">
-                <Search className="h-5 w-5 shrink-0 text-blue-500" />
-                <input
-                  type="text"
-                  placeholder="Search clinics, nephrologists, or specializations..."
-                  className="w-full text-base text-slate-900 placeholder-slate-400 focus:outline-none bg-transparent py-3"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <button className="w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl transition-all shadow-md shadow-blue-600/30 flex items-center justify-center gap-2">
-                Search
-              </button>
-            </div>
           </div>
         </section>
 

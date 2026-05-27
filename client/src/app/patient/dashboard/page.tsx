@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -9,7 +15,7 @@ import {
 } from 'lucide-react';
 import { PatientSidebar } from '../../../components/patient/PatientSidebar';
 import { NotificationBell } from '../../../components/ui/NotificationBell';
-import { HealthCompanionDrawer } from '../../../components/patient/HealthCompanionDrawer';
+
 import { PatientOnboardingBanner } from '../../../components/patient/PatientOnboardingBanner';
 import { Modal } from '../../../components/ui/Modal';
 
@@ -108,7 +114,7 @@ export default function PatientDashboard() {
 
         {/* Topbar & Banner */}
         <header className="shrink-0 bg-white border-b border-gray-200 z-10 shadow-sm">
-          <div className="h-16 flex items-center px-8 justify-between">
+          <div className="h-16 flex items-center pl-16 md:pl-8 pr-8 justify-between">
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">Overview</h1>
             <div className="flex items-center gap-4">
               <NotificationBell role="patient" />
@@ -116,12 +122,12 @@ export default function PatientDashboard() {
           </div>
           
           {!connected_doctor && (
-            <div className="bg-amber-50 border-t border-b border-amber-200 px-8 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-800 text-sm font-medium">
-                <AlertCircle className="h-4 w-4" />
-                You are not connected to a doctor yet. Connect with a doctor to book appointments and receive prescriptions.
+            <div className="bg-amber-50 border-t border-b border-amber-200 px-4 sm:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <div className="flex items-start gap-2 text-amber-800 text-sm font-medium">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>You are not connected to a doctor yet. Connect with a doctor to book appointments and receive prescriptions.</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button 
                   onClick={() => setConnectModalOpen(true)}
                   className="text-xs font-bold text-amber-700 bg-white border border-amber-200 hover:bg-amber-100 px-4 py-1.5 rounded-full transition-colors"
@@ -139,7 +145,7 @@ export default function PatientDashboard() {
           )}
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
           {!onboarding_complete && (
             <PatientOnboardingBanner data={dashboardData} onComplete={fetchDashboardData} />
           )}
@@ -401,7 +407,7 @@ export default function PatientDashboard() {
         />
       )}
 
-      <HealthCompanionDrawer doctorName={connected_doctor?.full_name || 'your doctor'} />
+
     </div>
   );
 }

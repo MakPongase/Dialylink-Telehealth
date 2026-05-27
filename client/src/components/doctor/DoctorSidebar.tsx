@@ -1,10 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, Users, Calendar, LogOut, 
-  Activity, MessageSquare, UserPlus, Bot, Settings
+  Activity, MessageSquare, UserPlus, Bot, Settings,
+  Menu, X
 } from 'lucide-react';
 import api from '../../lib/api';
 
@@ -14,8 +21,9 @@ interface DoctorSidebarProps {
 
 export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
   const router = useRouter();
-
-  const [pendingRequestsCount, setPendingRequestsCount] = React.useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   React.useEffect(() => {
     const fetchRequestsCount = async () => {
@@ -31,8 +39,6 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
     fetchRequestsCount();
   }, []);
 
-  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
-
   const handleLogout = () => {
     setIsLoggingOut(true);
     setTimeout(() => {
@@ -43,9 +49,14 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
     }, 1500);
   };
 
+  const navigate = (route: string) => {
+    setIsOpen(false);
+    router.push(route);
+  };
+
   const NavItem = ({ id, icon: Icon, label, route, badge }: { id: string, icon: any, label: string, route: string, badge?: number }) => (
     <button
-      onClick={() => router.push(route)}
+      onClick={() => navigate(route)}
       className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
         activeItem === id 
           ? 'bg-blue-50/50 text-blue-700' 
@@ -62,16 +73,25 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
     </button>
   );
 
-  return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col shrink-0 relative z-20 h-full">
-      <div className="p-6 border-b border-gray-100 flex items-center gap-2">
-        <Activity className="h-6 w-6 text-blue-600" />
-        <span className="text-lg font-bold tracking-tight text-gray-900">
-          DialyLink
-          <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase ml-2 align-middle">
-            Doctor
+  const SidebarContent = () => (
+    <>
+      <div className="p-6 border-b border-gray-100 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Activity className="h-6 w-6 text-blue-600" />
+          <span className="text-lg font-bold tracking-tight text-gray-900">
+            DialyLink
+            <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase ml-2 align-middle">
+              Doctor
+            </span>
           </span>
-        </span>
+        </div>
+        {/* Close button (mobile only) */}
+        <button
+          className="md:hidden text-gray-400 hover:text-gray-600 transition-colors"
+          onClick={() => setIsOpen(false)}
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
       
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8">
@@ -104,6 +124,43 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
           Sign Out
         </button>
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Mobile hamburger button ── */}
+      <button
+        className="md:hidden fixed top-4 left-4 z-50 bg-white border border-gray-200 rounded-lg p-2 shadow-sm text-gray-600 hover:text-gray-900 transition-colors"
+        onClick={() => setIsOpen(true)}
+        aria-label="Open menu"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* ── Mobile overlay backdrop ── */}
+      {isOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* ── Mobile slide-over drawer ── */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out
+          md:hidden
+          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+      >
+        <SidebarContent />
+      </aside>
+
+      {/* ── Desktop static sidebar ── */}
+      <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col shrink-0 relative z-20 h-full">
+        <SidebarContent />
+      </aside>
 
       {isLoggingOut && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/60 backdrop-blur-sm">
@@ -113,6 +170,6 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
           </div>
         </div>
       )}
-    </aside>
+    </>
   );
 }

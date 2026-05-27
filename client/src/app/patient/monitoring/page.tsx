@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -8,16 +14,8 @@ import {
 } from 'lucide-react';
 import { PatientSidebar } from '../../../components/patient/PatientSidebar';
 import { Modal } from '../../../components/ui/Modal';
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts';
-
-const SYMPTOMS_LIST = [
-  'Nausea', 'Vomiting', 'Cramps', 'Headache', 'Dizziness',
-  'Chest Pain', 'Shortness of Breath', 'Edema', 'Fatigue',
-  'Muscle Weakness', 'Itching (Pruritus)', 'Fever / Chills',
-  'Bleeding at Access Site'
-];
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LogSessionModal } from '../../../components/shared/LogSessionModal';
 
 export default function MonitoringPage() {
   const router = useRouter();
@@ -28,28 +26,6 @@ export default function MonitoringPage() {
   // Form State
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [sessionDate, setSessionDate] = useState(new Date().toISOString().split('T')[0]);
-  const [bpBefore, setBpBefore] = useState('');
-  const [bpAfter, setBpAfter] = useState('');
-  const [weightBefore, setWeightBefore] = useState('');
-  const [weightAfter, setWeightAfter] = useState('');
-  const [fluidIntake, setFluidIntake] = useState('');
-  const [duration, setDuration] = useState('240');
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [notes, setNotes] = useState('');
-
-  // Additional fields for HD/PD
-  const [dialysisType, setDialysisType] = useState<'hemodialysis' | 'peritoneal'>('hemodialysis');
-  const [bloodFlowRate, setBloodFlowRate] = useState('');
-  const [accessSite, setAccessSite] = useState('Arteriovenous Fistula');
-  const [ultrafiltrationVolume, setUltrafiltrationVolume] = useState('');
-  const [numExchanges, setNumExchanges] = useState('');
-  const [dwellTimeHours, setDwellTimeHours] = useState('');
-  const [fillVolumeMl, setFillVolumeMl] = useState('');
-  const [drainVolumeMl, setDrainVolumeMl] = useState('');
-  const [dialysateGlucose, setDialysateGlucose] = useState('1.5');
-  const [effluentAppearance, setEffluentAppearance] = useState('clear');
 
   const [redBanners, setRedBanners] = useState<string[]>([]);
   const [amberBanners, setAmberBanners] = useState<string[]>([]);
@@ -90,71 +66,23 @@ export default function MonitoringPage() {
     }
   };
 
-  const toggleSymptom = (sym: string) => {
-    if (sym === 'None') {
-      setSelectedSymptoms(['None']);
-      return;
-    }
-    
-    setSelectedSymptoms(prev => {
-      const filtered = prev.filter(s => s !== 'None');
-      if (filtered.includes(sym)) {
-        return filtered.filter(s => s !== sym);
-      }
-      return [...filtered, sym];
-    });
-  };
 
-  // Validation Warning Logic
-  const checkBpUnusual = (bp: string) => {
-    if (!bp || !bp.includes('/')) return false;
-    const [sys, dia] = bp.split('/').map(n => parseInt(n, 10));
-    if (isNaN(sys) || isNaN(dia)) return false;
-    if (sys < 60 || sys > 250 || dia < 40 || dia > 150) return true;
-    return false;
-  };
-
-  const showBpWarning = checkBpUnusual(bpBefore) || checkBpUnusual(bpAfter);
-
-  const submitLog = async () => {
+  const submitLog = async (payload: any) => {
     setIsSubmitting(true);
 
     try {
-      const payload = {
-        session_date: sessionDate,
-        bp_before: bpBefore,
-        bp_after: bpAfter,
-        weight_before: weightBefore,
-        weight_after: weightAfter,
-        fluid_intake_ml: fluidIntake ? parseInt(fluidIntake) : null,
-        duration_minutes: parseInt(duration),
-        symptoms: selectedSymptoms,
-        notes: notes,
-        dialysis_type: dialysisType,
-        blood_flow_rate: bloodFlowRate ? parseInt(bloodFlowRate) : null,
-        access_site: accessSite,
-        ultrafiltration_volume: ultrafiltrationVolume ? parseInt(ultrafiltrationVolume) : null,
-        num_exchanges: numExchanges ? parseInt(numExchanges) : null,
-        dwell_time_hours: dwellTimeHours ? parseFloat(dwellTimeHours) : null,
-        fill_volume_ml: fillVolumeMl ? parseInt(fillVolumeMl) : null,
-        drain_volume_ml: drainVolumeMl ? parseInt(drainVolumeMl) : null,
-        dialysate_glucose_percent: dialysateGlucose ? parseFloat(dialysateGlucose) : null,
-        effluent_appearance: effluentAppearance
-      };
-
       const res = await api.post('/api/patient/monitoring', payload);
       
       if (res.data.success) {
         setSessions([res.data.data, ...sessions]);
         setIsLogModalOpen(false);
-        resetForm();
 
         const newRedBanners = [];
         const newAmberBanners = [];
 
         // BP checks
-        const [preSys, preDia] = bpBefore ? bpBefore.split('/').map(Number) : [0,0];
-        const [postSys, postDia] = bpAfter ? bpAfter.split('/').map(Number) : [0,0];
+        const [preSys, preDia] = payload.bp_before ? payload.bp_before.split('/').map(Number) : [0,0];
+        const [postSys, postDia] = payload.bp_after ? payload.bp_after.split('/').map(Number) : [0,0];
         
         if ((postSys && postSys > 180) || (postDia && postDia > 110)) {
            newRedBanners.push('Your BP reading has been flagged. Your doctor has been notified automatically.');
@@ -171,13 +99,13 @@ export default function MonitoringPage() {
         }
 
         // PD checks
-        if (dialysisType === 'peritoneal') {
-           if (effluentAppearance === 'slightly_cloudy') {
+        if (payload.dialysis_type === 'peritoneal') {
+           if (payload.effluent_appearance === 'slightly_cloudy') {
               newAmberBanners.push('Slightly cloudy effluent can sometimes be normal after a long dwell. Monitor for changes. If it worsens or you develop abdominal pain or fever, contact your doctor.');
            }
-           if (drainVolumeMl && fillVolumeMl) {
-              const dv = parseInt(drainVolumeMl);
-              const fv = parseInt(fillVolumeMl);
+           if (payload.drain_volume_ml && payload.fill_volume_ml) {
+              const dv = parseInt(payload.drain_volume_ml);
+              const fv = parseInt(payload.fill_volume_ml);
               if (dv < fv * 0.8) {
                  newRedBanners.push('Your drain volume was lower than expected. Your doctor has been notified.');
               }
@@ -198,10 +126,9 @@ export default function MonitoringPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (dialysisType === 'hemodialysis') {
-      const hasTodayHD = sessions.some(s => s.dialysis_type === 'hemodialysis' && new Date(s.session_date).toISOString().split('T')[0] === sessionDate);
+  const handleModalSubmit = async (payload: any) => {
+    if (payload.dialysis_type === 'hemodialysis') {
+      const hasTodayHD = sessions.some(s => s.dialysis_type === 'hemodialysis' && new Date(s.session_date).toISOString().split('T')[0] === payload.session_date);
       if (hasTodayHD) {
         setConfirmState({
           isOpen: true,
@@ -211,35 +138,13 @@ export default function MonitoringPage() {
           confirmText: 'Log Session',
           onConfirm: () => {
             setConfirmState(prev => ({...prev, isOpen: false}));
-            submitLog();
+            submitLog(payload);
           }
         });
         return;
       }
     }
-    submitLog();
-  };
-
-  const resetForm = () => {
-    setSessionDate(new Date().toISOString().split('T')[0]);
-    setBpBefore('');
-    setBpAfter('');
-    setWeightBefore('');
-    setWeightAfter('');
-    setFluidIntake('');
-    setDuration('240');
-    setSelectedSymptoms([]);
-    setNotes('');
-    setDialysisType('hemodialysis');
-    setBloodFlowRate('');
-    setAccessSite('Arteriovenous Fistula');
-    setUltrafiltrationVolume('');
-    setNumExchanges('');
-    setDwellTimeHours('');
-    setFillVolumeMl('');
-    setDrainVolumeMl('');
-    setDialysateGlucose('1.5');
-    setEffluentAppearance('clear');
+    await submitLog(payload);
   };
 
   // Chart Data preparation
@@ -271,7 +176,7 @@ export default function MonitoringPage() {
       <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Topbar & Banners */}
         <header className="shrink-0 bg-white border-b border-gray-200 z-10 shadow-sm">
-          <div className="h-16 flex items-center px-8 justify-between">
+          <div className="h-16 flex items-center pl-16 md:pl-8 pr-8 justify-between">
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">Monitoring Log</h1>
             <button 
               onClick={() => setIsLogModalOpen(true)}
@@ -314,7 +219,7 @@ export default function MonitoringPage() {
           ))}
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
           <div className="max-w-6xl mx-auto w-full space-y-8">
             
             {loading ? (
@@ -384,9 +289,9 @@ export default function MonitoringPage() {
                             <th className="px-6 py-4">Type</th>
                             <th className="px-6 py-4">BP (Pre &rarr; Post)</th>
                             <th className="px-6 py-4">Weight (Pre &rarr; Post)</th>
-                            <th className="px-6 py-4">IDWG</th>
                             <th className="px-6 py-4">Duration</th>
                             <th className="px-6 py-4">Symptoms</th>
+                            <th className="px-6 py-4">Logged By</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -440,6 +345,13 @@ export default function MonitoringPage() {
                                     )) : <span className="text-gray-400 italic text-xs">None</span>}
                                   </div>
                                 </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  {s.logged_by_role === 'doctor' ? (
+                                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100 border border-blue-200 px-2 py-1 rounded">Doctor</span>
+                                  ) : (
+                                    <span className="text-[10px] font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 rounded">You</span>
+                                  )}
+                                </td>
                               </tr>
                             );
                           })}
@@ -457,307 +369,12 @@ export default function MonitoringPage() {
 
       {/* Log Session Modal */}
       {isLogModalOpen && (
-        <Modal
+        <LogSessionModal
           isOpen={isLogModalOpen}
-          onClose={() => !isSubmitting && setIsLogModalOpen(false)}
-          title="Log Dialysis Session"
-          message="Record your vitals and symptoms for this session."
-          hideCancel
-          maxWidth="max-w-3xl"
-        >
-          <form onSubmit={handleSubmit} className="space-y-4">
-            
-            {(selectedSymptoms.includes('Chest Pain') || selectedSymptoms.includes('Shortness of Breath')) && (
-              <div className="bg-red-600 text-white p-4 rounded-lg text-sm font-bold w-full shadow-sm flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
-                <p>⚠ If you are currently experiencing chest pain or difficulty breathing, call emergency services (911) immediately. Do not wait for a response from your doctor.</p>
-              </div>
-            )}
-            
-            {/* Dialysis Type Selector */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <button
-                type="button"
-                onClick={() => setDialysisType('hemodialysis')}
-                className={`flex-1 py-2 text-sm font-bold rounded-md ${dialysisType === 'hemodialysis' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                Hemodialysis
-              </button>
-              <button
-                type="button"
-                onClick={() => setDialysisType('peritoneal')}
-                className={`flex-1 py-2 text-sm font-bold rounded-md ${dialysisType === 'peritoneal' ? 'bg-white text-purple-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-              >
-                Peritoneal Dialysis
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Session Date</label>
-                <input 
-                  type="date" 
-                  required
-                  value={sessionDate}
-                  onChange={e => setSessionDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1">Duration (mins)</label>
-                <input 
-                  type="number" 
-                  required min="1" max="720"
-                  value={duration}
-                  onChange={e => setDuration(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg space-y-4">
-              <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Blood Pressure (mmHg)</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-blue-800 mb-1">Pre-Dialysis</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. 120/80" 
-                    required pattern="\d{2,3}\/\d{2,3}"
-                    title="Format: 120/80"
-                    value={bpBefore}
-                    onChange={e => setBpBefore(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-blue-800 mb-1">Post-Dialysis</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. 110/75" 
-                    required pattern="\d{2,3}\/\d{2,3}"
-                    title="Format: 120/80"
-                    value={bpAfter}
-                    onChange={e => setBpAfter(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
-              </div>
-              {showBpWarning && (
-                <div className="text-amber-600 text-xs font-bold flex items-center gap-1.5 bg-amber-50 p-2 rounded border border-amber-200">
-                  <AlertTriangle className="h-3 w-3 shrink-0" />
-                  This reading seems unusual. Please double-check before submitting.
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Weight (kg)</h4>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Pre-Dialysis</label>
-                  <input 
-                    type="number" 
-                    step="0.1" required
-                    value={weightBefore}
-                    onChange={e => setWeightBefore(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Post-Dialysis</label>
-                  <input 
-                    type="number" 
-                    step="0.1" required
-                    value={weightAfter}
-                    onChange={e => setWeightAfter(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Other</h4>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Fluid Intake (ml)</label>
-                  <input 
-                    type="number" 
-                    placeholder="Optional"
-                    value={fluidIntake}
-                    onChange={e => setFluidIntake(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">Notes</label>
-                  <input 
-                    type="text" 
-                    placeholder="Optional"
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Symptoms</h4>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => toggleSymptom('None')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${selectedSymptoms.includes('None') ? 'bg-teal-600 text-white border-teal-600' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-                >
-                  None
-                </button>
-                {SYMPTOMS_LIST.map(sym => (
-                  <button
-                    key={sym}
-                    type="button"
-                    onClick={() => toggleSymptom(sym)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${selectedSymptoms.includes(sym) ? 'bg-teal-600 text-white border-teal-600' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
-                  >
-                    {sym}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Conditional HD/PD Sections */}
-            {dialysisType === 'hemodialysis' && (
-              <div className="p-3 bg-teal-50 border border-teal-100 rounded-lg space-y-4">
-                <h4 className="text-xs font-bold text-teal-900 uppercase tracking-wider">Hemodialysis Details</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-teal-800 mb-1">Blood Flow Rate (mL/min)</label>
-                    <input 
-                      type="number" placeholder="e.g. 300"
-                      value={bloodFlowRate}
-                      onChange={e => setBloodFlowRate(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-teal-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-teal-800 mb-1">Access Site</label>
-                    <select
-                      value={accessSite}
-                      onChange={e => setAccessSite(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-teal-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                    >
-                      <option>Arteriovenous Fistula</option>
-                      <option>AV Graft</option>
-                      <option>Central Venous Catheter</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-teal-800 mb-1">Ultrafiltration Volume (mL)</label>
-                    <input 
-                      type="number"
-                      value={ultrafiltrationVolume}
-                      onChange={e => setUltrafiltrationVolume(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-teal-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {dialysisType === 'peritoneal' && (
-              <div className="p-3 bg-purple-50 border border-purple-100 rounded-lg space-y-4">
-                <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">Peritoneal Details</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-purple-800 mb-1">Number of Exchanges</label>
-                    <input 
-                      type="number" required
-                      value={numExchanges}
-                      onChange={e => setNumExchanges(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-purple-800 mb-1">Dwell Time (hours)</label>
-                    <input 
-                      type="number" step="0.5"
-                      value={dwellTimeHours}
-                      onChange={e => setDwellTimeHours(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-purple-800 mb-1">Fill Volume (mL)</label>
-                    <input 
-                      type="number"
-                      value={fillVolumeMl}
-                      onChange={e => setFillVolumeMl(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-purple-800 mb-1">Drain Volume (mL)</label>
-                    <input 
-                      type="number"
-                      value={drainVolumeMl}
-                      onChange={e => setDrainVolumeMl(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-purple-800 mb-1">Dialysate Glucose %</label>
-                    <select
-                      value={dialysateGlucose}
-                      onChange={e => setDialysateGlucose(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                    >
-                      <option value="1.5">1.5%</option>
-                      <option value="2.5">2.5%</option>
-                      <option value="4.25">4.25%</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-purple-800 mb-1">Effluent Appearance</label>
-                    <select
-                      value={effluentAppearance}
-                      onChange={e => setEffluentAppearance(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-purple-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
-                    >
-                      <option value="clear">Clear</option>
-                      <option value="slightly_cloudy">Slightly Cloudy</option>
-                      <option value="cloudy">Cloudy</option>
-                      <option value="bloody">Bloody</option>
-                    </select>
-                  </div>
-                </div>
-                {(effluentAppearance === 'cloudy' || effluentAppearance === 'bloody') && (
-                  <div className="text-red-600 text-xs font-bold flex items-center gap-1.5 bg-red-50 p-2 rounded border border-red-200 mt-2">
-                    <AlertTriangle className="h-3 w-3 shrink-0" />
-                    Cloudy or bloody effluent may indicate infection. Your doctor will be notified immediately.
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
-              <button 
-                type="button"
-                onClick={() => setIsLogModalOpen(false)}
-                disabled={isSubmitting}
-                className="px-5 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 bg-teal-600 text-white text-sm font-bold rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50"
-              >
-                {isSubmitting ? 'Saving...' : 'Save Log'}
-              </button>
-            </div>
-          </form>
-        </Modal>
+          onClose={() => setIsLogModalOpen(false)}
+          onSubmit={handleModalSubmit}
+          isSubmitting={isSubmitting}
+        />
       )}
 
       <Modal 

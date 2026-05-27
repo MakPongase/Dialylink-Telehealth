@@ -82,6 +82,7 @@ CREATE TABLE dialysis_sessions (
     duration_minutes INTEGER,
     symptoms TEXT[],
     notes TEXT,
+    logged_by_role VARCHAR(20) DEFAULT 'patient',
     logged_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 

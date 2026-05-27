@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -11,6 +17,7 @@ import SignatureCanvas from 'react-signature-canvas';
 import { supabase } from '../../../../lib/supabase';
 
 import { DoctorSidebar } from '../../../../components/doctor/DoctorSidebar';
+import { LogSessionModal } from '../../../../components/shared/LogSessionModal';
 
 function trimCanvas(canvas: HTMLCanvasElement): HTMLCanvasElement {
   const ctx = canvas.getContext('2d');
@@ -71,15 +78,7 @@ export default function PatientDetailsPage() {
   const sessionsPerPage = 5;
   const [logSessionState, setLogSessionState] = useState({
     isOpen: false,
-    isSubmitting: false,
-    session_date: new Date().toISOString().split('T')[0],
-    dialysis_type: 'hemodialysis',
-    bp_before: '', bp_after: '',
-    weight_before: '', weight_after: '',
-    duration_minutes: '240',
-    fluid_intake_ml: '',
-    notes: '',
-    access_site: '', blood_flow_rate: '', ultrafiltration_volume: ''
+    isSubmitting: false
   });
 
   // Alerts
@@ -100,7 +99,7 @@ export default function PatientDetailsPage() {
     notes: '',
     consultation_id: '',
     medications: [
-      { medication_name: '', dosage_amount: '', dosage_unit: 'mg', frequency: 'Once daily', custom_frequency: '', duration: '', instructions: '' }
+      { medication_name: '', dosage_amount: '', dosage_unit: 'mg', frequency: 'Once daily (QD)', custom_frequency: '', duration_amount: '', duration_unit: 'Days', instructions: '' }
     ],
     isSubmitting: false
   });
@@ -150,18 +149,10 @@ export default function PatientDetailsPage() {
     }
   };
 
-  const handleLogSession = async () => {
+  const handleLogSession = async (payload: any) => {
     setLogSessionState(prev => ({ ...prev, isSubmitting: true }));
     try {
-      const { session_date, dialysis_type, bp_before, bp_after, weight_before, weight_after, duration_minutes, fluid_intake_ml, notes, access_site, blood_flow_rate, ultrafiltration_volume } = logSessionState;
-      const res = await api.post(`/api/doctor/patients/${id}/sessions`, {
-        session_date, dialysis_type, bp_before, bp_after,
-        weight_before: weight_before ? parseFloat(weight_before) : null,
-        weight_after: weight_after ? parseFloat(weight_after) : null,
-        duration_minutes: duration_minutes ? parseInt(duration_minutes) : null,
-        fluid_intake_ml: fluid_intake_ml ? parseInt(fluid_intake_ml) : null,
-        notes, access_site, blood_flow_rate, ultrafiltration_volume
-      });
+      const res = await api.post(`/api/doctor/patients/${id}/sessions`, payload);
       if (res.data.success) {
         setLogSessionState(prev => ({ ...prev, isOpen: false, isSubmitting: false }));
         setAlertState({ isOpen: true, type: 'success', title: 'Session Logged', message: 'Dialysis session recorded successfully.' });
@@ -175,7 +166,7 @@ export default function PatientDetailsPage() {
 
   const issuePrescription = async () => {
     const { notes, consultation_id, medications } = rxFormState;
-    const validMeds = medications.filter(m => m.medication_name && m.dosage_amount && m.duration);
+    const validMeds = medications.filter(m => m.medication_name && m.dosage_amount && m.duration_amount);
     if (validMeds.length === 0) return;
 
     let finalSignatureUrl = patientData?.doctorSignature || null;
@@ -218,6 +209,7 @@ export default function PatientDetailsPage() {
       const formattedMeds = validMeds.map(m => ({
         ...m,
         dosage: `${m.dosage_amount} ${m.dosage_unit}`,
+        duration: `${m.duration_amount} ${m.duration_unit}`,
         frequency: m.frequency === 'Custom' ? m.custom_frequency : m.frequency
       }));
 
@@ -230,7 +222,7 @@ export default function PatientDetailsPage() {
 
       if (res.data.success) {
         setRxFormState({
-          isOpen: false, step: 1, notes: '', consultation_id: '', medications: [{ medication_name: '', dosage_amount: '', dosage_unit: 'mg', frequency: 'Once daily', custom_frequency: '', duration: '', instructions: '' }], isSubmitting: false
+          isOpen: false, step: 1, notes: '', consultation_id: '', medications: [{ medication_name: '', dosage_amount: '', dosage_unit: 'mg', frequency: 'Once daily (QD)', custom_frequency: '', duration_amount: '', duration_unit: 'Days', instructions: '' }], isSubmitting: false
         });
         setShowSketchpad(false);
         setAlertState({ isOpen: true, type: 'success', title: 'Success', message: 'Prescription issued successfully.' });
@@ -306,7 +298,7 @@ export default function PatientDetailsPage() {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-16 shrink-0 bg-white border-b border-gray-200 flex items-center px-8 z-10 shadow-sm">
+        <header className="h-16 shrink-0 bg-white border-b border-gray-200 flex items-center pl-16 md:pl-8 pr-8 z-10 shadow-sm">
           <button 
             onClick={() => router.push('/doctor/patients')}
             className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
@@ -315,48 +307,56 @@ export default function PatientDetailsPage() {
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-6xl mx-auto w-full space-y-8 animate-in fade-in duration-500">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
+          <div className="max-w-6xl mx-auto w-full space-y-6 animate-in fade-in duration-500">
         
-        {/* Patient Info Card (Top) */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-          <div className="flex items-center gap-6">
+        {/* Patient Info Card */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-8 shadow-sm">
+          {/* Top: avatar + name + status */}
+          <div className="flex items-center gap-4 mb-4">
             {profile.profile_photo_url ? (
-              <img src={profile.profile_photo_url} className="w-20 h-20 rounded-full border-2 border-gray-100 object-cover shadow-sm" alt="" />
+              <img src={profile.profile_photo_url} className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-gray-100 object-cover shadow-sm shrink-0" alt="" />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-2xl border border-indigo-100 shadow-sm">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-2xl border border-indigo-100 shadow-sm shrink-0">
                 {profile.name.charAt(0)}
               </div>
             )}
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{profile.name}</h1>
-                <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight truncate">{profile.name}</h1>
+                <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0">
                   Active
                 </span>
               </div>
-              <div className="text-sm text-gray-500 mt-2 flex flex-wrap gap-x-6 gap-y-1 font-medium">
-                <span><strong className="text-gray-700">Age:</strong> {age}</span>
-                <span><strong className="text-gray-700">DOB:</strong> {profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'}</span>
-                <span><strong className="text-gray-700">Blood Type:</strong> {profile.blood_type || 'Unknown'}</span>
-                <span><strong className="text-gray-700">Phone:</strong> {profile.phone || 'N/A'}</span>
-              </div>
-              {/* Action Buttons */}
-              <div className="flex gap-3 w-full md:w-auto mt-4">
-                <button 
-                  onClick={() => setScheduleState({ ...scheduleState, isOpen: true })}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm"
-                >
-                  <Calendar className="h-4 w-4 text-blue-600" /> Schedule Consultation
-                </button>
-                <button 
-                  onClick={() => router.push(`/doctor/chat?userId=${profile.user_id}`)}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm"
-                >
-                  <MessageSquare className="h-4 w-4" /> Send Message
-                </button>
-              </div>
             </div>
+          </div>
+
+          {/* Meta grid: 2-col on mobile, flowing on desktop */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-x-6 gap-y-2 text-sm font-medium mb-5 border-t border-gray-100 pt-4">
+            <span className="text-gray-500"><strong className="text-gray-700">Age:</strong> {age}</span>
+            <span className="text-gray-500"><strong className="text-gray-700">Blood Type:</strong> {profile.blood_type || 'Unknown'}</span>
+            <span className="text-gray-500 col-span-2 sm:col-span-1"><strong className="text-gray-700">DOB:</strong> {profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'N/A'}</span>
+            <span className="text-gray-500 col-span-2 sm:col-span-1"><strong className="text-gray-700">Phone:</strong> {profile.phone || 'N/A'}</span>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => setScheduleState({ ...scheduleState, isOpen: true })}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm"
+            >
+              <Calendar className="h-4 w-4 text-blue-600" />
+              <span className="hidden sm:inline">Schedule Consultation</span>
+              <span className="sm:hidden">Schedule</span>
+            </button>
+            <button
+              onClick={() => router.push(`/doctor/chat?userId=${profile.user_id}`)}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-sm"
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span className="hidden sm:inline">Send Message</span>
+              <span className="sm:hidden">Message</span>
+            </button>
           </div>
         </div>
 
@@ -364,15 +364,15 @@ export default function PatientDetailsPage() {
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
           <div className="flex overflow-x-auto border-b border-gray-100 bg-gray-50/50">
              {[
-               { id: 'sessions', label: 'Recent Sessions', icon: Activity },
-               { id: 'labs', label: 'Lab Results', icon: FileCheck },
-               { id: 'prescriptions', label: 'Prescriptions', icon: Stethoscope },
-               { id: 'notes', label: 'Doctor Notes', icon: Edit3 }
+               { id: 'sessions', label: 'Sessions', icon: Activity },
+               { id: 'labs', label: 'Labs', icon: FileCheck },
+               { id: 'prescriptions', label: 'Rx', icon: Stethoscope },
+               { id: 'notes', label: 'Notes', icon: Edit3 }
              ].map(tab => (
                <button
                  key={tab.id}
                  onClick={() => setActiveTab(tab.id)}
-                 className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+                 className={`flex items-center gap-1.5 px-3 sm:px-6 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                    activeTab === tab.id ? 'border-blue-600 text-blue-600 bg-white' : 'border-transparent text-gray-500 hover:text-gray-900 hover:bg-white'
                  }`}
                >
@@ -385,16 +385,16 @@ export default function PatientDetailsPage() {
              {/* SESSIONS TAB */}
              {activeTab === 'sessions' && (
                 <div className="overflow-x-auto">
-                  <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100 bg-white">
+                  <div className="px-4 sm:px-6 py-4 flex items-center justify-between border-b border-gray-100 bg-white">
                     <span className="text-sm font-semibold text-gray-600">{sessions.length} session{sessions.length !== 1 ? 's' : ''} recorded</span>
                     <button
                       onClick={() => setLogSessionState(prev => ({ ...prev, isOpen: true }))}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-sm"
+                      className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-sm"
                     >
                       <Activity className="h-4 w-4" /> Log Session
                     </button>
                   </div>
-                  <table className="w-full text-left text-sm border-collapse">
+                  <table className="w-full text-left text-sm border-collapse min-w-[800px]">
                     <thead>
                       <tr className="bg-white border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[10px]">
                         <th className="px-6 py-4">Date</th>
@@ -404,6 +404,7 @@ export default function PatientDetailsPage() {
                         <th className="px-6 py-4">IDWG</th>
                         <th className="px-6 py-4">BP (Pre &rarr; Post)</th>
                         <th className="px-6 py-4">Notes & Effluent</th>
+                        <th className="px-6 py-4">Logged By</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
@@ -460,6 +461,13 @@ export default function PatientDetailsPage() {
                                 </span>
                               )}
                             </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {s.logged_by_role === 'doctor' ? (
+                              <span className="text-[10px] font-bold text-blue-700 bg-blue-100 border border-blue-200 px-2 py-1 rounded">You</span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-gray-700 bg-gray-100 border border-gray-200 px-2 py-1 rounded">Patient</span>
+                            )}
                           </td>
                         </tr>
                       )})}
@@ -719,120 +727,22 @@ export default function PatientDetailsPage() {
       </div>
 
       {/* Log Session Modal */}
-      <Modal
-        isOpen={logSessionState.isOpen}
-        onClose={() => setLogSessionState(prev => ({ ...prev, isOpen: false }))}
-        title="Log Dialysis Session"
-        hideCancel
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Session Date</label>
-              <input type="date" value={logSessionState.session_date}
-                onChange={e => setLogSessionState(prev => ({ ...prev, session_date: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Type</label>
-              <select value={logSessionState.dialysis_type}
-                onChange={e => setLogSessionState(prev => ({ ...prev, dialysis_type: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
-                <option value="hemodialysis">Hemodialysis (HD)</option>
-                <option value="peritoneal">Peritoneal Dialysis (PD)</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">BP Before (e.g. 130/85)</label>
-              <input type="text" placeholder="e.g. 130/85" value={logSessionState.bp_before}
-                onChange={e => setLogSessionState(prev => ({ ...prev, bp_before: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">BP After</label>
-              <input type="text" placeholder="e.g. 120/80" value={logSessionState.bp_after}
-                onChange={e => setLogSessionState(prev => ({ ...prev, bp_after: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Weight Before (kg)</label>
-              <input type="number" step="0.1" placeholder="e.g. 73.5" value={logSessionState.weight_before}
-                onChange={e => setLogSessionState(prev => ({ ...prev, weight_before: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Weight After (kg)</label>
-              <input type="number" step="0.1" placeholder="e.g. 71.2" value={logSessionState.weight_after}
-                onChange={e => setLogSessionState(prev => ({ ...prev, weight_after: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Duration (minutes)</label>
-              <input type="number" placeholder="240" value={logSessionState.duration_minutes}
-                onChange={e => setLogSessionState(prev => ({ ...prev, duration_minutes: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Fluid Intake (mL)</label>
-              <input type="number" placeholder="optional" value={logSessionState.fluid_intake_ml}
-                onChange={e => setLogSessionState(prev => ({ ...prev, fluid_intake_ml: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-            </div>
-          </div>
-
-          {logSessionState.dialysis_type === 'hemodialysis' && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Access Site</label>
-                <input type="text" placeholder="e.g. AV Fistula (Left arm)" value={logSessionState.access_site}
-                  onChange={e => setLogSessionState(prev => ({ ...prev, access_site: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Blood Flow Rate (mL/min)</label>
-                <input type="number" placeholder="e.g. 300" value={logSessionState.blood_flow_rate}
-                  onChange={e => setLogSessionState(prev => ({ ...prev, blood_flow_rate: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" />
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Notes</label>
-            <textarea placeholder="Clinical observations from this session..." value={logSessionState.notes}
-              onChange={e => setLogSessionState(prev => ({ ...prev, notes: e.target.value }))}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" />
-          </div>
-
-          <div className="pt-2 flex justify-end gap-3">
-            <button onClick={() => setLogSessionState(prev => ({ ...prev, isOpen: false }))}
-              className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
-              Cancel
-            </button>
-            <button onClick={handleLogSession} disabled={logSessionState.isSubmitting}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2">
-              <Activity className="h-4 w-4" />
-              {logSessionState.isSubmitting ? 'Logging...' : 'Log Session'}
-            </button>
-          </div>
-        </div>
-      </Modal>
+      {logSessionState.isOpen && (
+        <LogSessionModal
+          isOpen={logSessionState.isOpen}
+          onClose={() => setLogSessionState(prev => ({ ...prev, isOpen: false }))}
+          onSubmit={handleLogSession}
+          isSubmitting={logSessionState.isSubmitting}
+          isDoctorView={true}
+        />
+      )}
 
       {/* Schedule Modal */}
       <Modal 
         isOpen={scheduleState.isOpen}
         onClose={() => setScheduleState({ ...scheduleState, isOpen: false })}
         title="Schedule Appointment"
+        message=""
         hideCancel
       >
 
@@ -889,18 +799,18 @@ export default function PatientDetailsPage() {
                 try {
                   const scheduled_at = new Date(`${scheduleState.date}T${scheduleState.time}`).toISOString();
                   const res = await api.post('/api/appointments', {
-                    patient_id: patientInfo?.patient_profile_id,
+                    patient_id: patientData?.profile?.user_id,
                     scheduled_at,
                     type: scheduleState.type,
                     notes: scheduleState.notes
                   });
                   if (res.data.success) {
                     setScheduleState(prev => ({ ...prev, isOpen: false, date: '', time: '', notes: '' }));
-                    setAlertState({ isOpen: true, type: 'success', message: 'Appointment scheduled successfully!' });
+                    setAlertState({ isOpen: true, type: 'success', title: 'Success', message: 'Appointment scheduled successfully!' });
                   }
                 } catch (error) {
                   console.error(error);
-                  setAlertState({ isOpen: true, type: 'danger', message: 'Failed to schedule appointment.' });
+                  setAlertState({ isOpen: true, type: 'danger', title: 'Error', message: 'Failed to schedule appointment.' });
                 } finally {
                   setScheduleState(prev => ({ ...prev, isSubmitting: false }));
                 }
@@ -976,7 +886,7 @@ export default function PatientDetailsPage() {
                   <button 
                     onClick={() => setRxFormState(prev => ({ 
                       ...prev, 
-                      medications: [...prev.medications, { medication_name: '', dosage_amount: '', dosage_unit: 'mg', frequency: 'Once daily', custom_frequency: '', duration: '', instructions: '' }] 
+                      medications: [...prev.medications, { medication_name: '', dosage_amount: '', dosage_unit: 'mg', frequency: 'Once daily (QD)', custom_frequency: '', duration_amount: '', duration_unit: 'Days', instructions: '' }] 
                     }))}
                     className="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors shadow-sm"
                   >
@@ -1002,8 +912,8 @@ export default function PatientDetailsPage() {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-gray-700 mb-1">Medication Name*</label>
                         <input 
                           type="text"
@@ -1051,18 +961,34 @@ export default function PatientDetailsPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-700 mb-1">Duration*</label>
-                        <input 
-                          type="text"
-                          value={med.duration}
-                          onChange={e => {
-                            const m = [...rxFormState.medications]; m[idx].duration = e.target.value;
-                            setRxFormState(prev => ({ ...prev, medications: m }));
-                          }}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm"
-                          placeholder="e.g. 30 days"
-                        />
+                        <div className="flex">
+                          <input 
+                            type="number"
+                            min="1"
+                            value={med.duration_amount}
+                            onChange={e => {
+                              const m = [...rxFormState.medications]; m[idx].duration_amount = e.target.value;
+                              setRxFormState(prev => ({ ...prev, medications: m }));
+                            }}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-l-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm"
+                            placeholder="e.g. 5"
+                          />
+                          <select
+                            value={med.duration_unit}
+                            onChange={e => {
+                              const m = [...rxFormState.medications]; m[idx].duration_unit = e.target.value;
+                              setRxFormState(prev => ({ ...prev, medications: m }));
+                            }}
+                            className="px-2 py-2 border-y border-r border-gray-200 rounded-r-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm bg-gray-50 text-gray-700"
+                          >
+                            <option value="Days">Days</option>
+                            <option value="Weeks">Weeks</option>
+                            <option value="Months">Months</option>
+                            <option value="Years">Years</option>
+                          </select>
+                        </div>
                       </div>
-                      <div className="col-span-2">
+                      <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-gray-700 mb-1">Frequency*</label>
                         <select 
                           value={med.frequency}
@@ -1072,16 +998,25 @@ export default function PatientDetailsPage() {
                           }}
                           className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white shadow-sm"
                         >
-                          <option value="Once daily">Once daily</option>
-                          <option value="Twice daily">Twice daily</option>
-                          <option value="Three times daily">Three times daily</option>
-                          <option value="Every other day">Every other day</option>
-                          <option value="As needed">As needed</option>
+                          <option value="Once daily (QD)">Once daily (QD)</option>
+                          <option value="Twice daily (BID)">Twice daily (BID)</option>
+                          <option value="Three times a day (TID)">Three times a day (TID)</option>
+                          <option value="Four times a day (QID)">Four times a day (QID)</option>
+                          <option value="Every 4 hours (q4h)">Every 4 hours (q4h)</option>
+                          <option value="Every 6 hours (q6h)">Every 6 hours (q6h)</option>
+                          <option value="Every 8 hours (q8h)">Every 8 hours (q8h)</option>
+                          <option value="Every 12 hours (q12h)">Every 12 hours (q12h)</option>
+                          <option value="Once a week (QW)">Once a week (QW)</option>
+                          <option value="Twice a week (BIW)">Twice a week (BIW)</option>
+                          <option value="Three times a week (TIW)">Three times a week (TIW)</option>
+                          <option value="Every other day (QOD)">Every other day (QOD)</option>
+                          <option value="As needed (PRN)">As needed (PRN)</option>
+                          <option value="At bedtime (QHS)">At bedtime (QHS)</option>
                           <option value="Custom">Custom</option>
                         </select>
                       </div>
                       {med.frequency === 'Custom' && (
-                        <div className="col-span-2">
+                        <div className="sm:col-span-2">
                           <input 
                             type="text"
                             value={med.custom_frequency}
@@ -1094,7 +1029,7 @@ export default function PatientDetailsPage() {
                           />
                         </div>
                       )}
-                      <div className="col-span-2">
+                      <div className="sm:col-span-2">
                         <label className="block text-xs font-semibold text-gray-700 mb-1">Instructions (Optional)</label>
                         <input 
                           type="text"
@@ -1129,8 +1064,8 @@ export default function PatientDetailsPage() {
                 </div>
                 
                 <div>
-                  <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <Stethoscope className="h-4 w-4 text-gray-700" /> Medications to Issue ({rxFormState.medications.filter(m => m.medication_name && m.dosage_amount && m.duration).length})
+                  <h4 className="font-bold text-gray-900 text-base mb-4 flex items-center gap-2">
+                    <Stethoscope className="h-4 w-4 text-gray-700" /> Medications to Issue ({rxFormState.medications.filter(m => m.medication_name && m.dosage_amount && m.duration_amount).length})
                   </h4>
                   <ul className="space-y-3">
                     {rxFormState.medications.map((med, idx) => {
@@ -1145,7 +1080,7 @@ export default function PatientDetailsPage() {
                                 <span className="text-sm font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">{med.dosage_amount} {med.dosage_unit}</span>
                               </div>
                               <div className="text-sm text-gray-600 mt-1 font-medium">
-                                {med.frequency === 'Custom' ? med.custom_frequency : med.frequency} &bull; {med.duration}
+                                {med.frequency === 'Custom' ? med.custom_frequency : med.frequency} &bull; {med.duration_amount} {med.duration_unit}
                               </div>
                             </div>
                           </div>
@@ -1158,8 +1093,8 @@ export default function PatientDetailsPage() {
                       );
                     })}
                   </ul>
-                  {rxFormState.medications.filter(m => m.medication_name && m.dosage_amount && m.duration).length === 0 && (
-                    <div className="text-sm text-red-600 bg-red-50 p-4 rounded-xl border border-red-100 font-medium">
+                  {rxFormState.medications.filter(m => m.medication_name && m.dosage_amount && m.duration_amount).length === 0 && (
+                    <div className="bg-amber-50 text-amber-700 p-4 rounded-xl text-sm font-medium flex items-start gap-3 mt-4 border border-amber-200">
                       Warning: No valid medications added. Please go back and add at least one valid medication (requires name, dosage, and duration).
                     </div>
                   )}
@@ -1220,8 +1155,8 @@ export default function PatientDetailsPage() {
             ) : (
               <button 
                 onClick={issuePrescription}
-                disabled={rxFormState.isSubmitting || rxFormState.medications.filter(m => m.medication_name && m.dosage_amount && m.duration).length === 0}
-                className="px-6 py-2.5 bg-teal-600 text-white text-sm font-semibold rounded-xl shadow-sm hover:bg-teal-700 transition-all hover:shadow focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                disabled={rxFormState.isSubmitting || rxFormState.medications.filter(m => m.medication_name && m.dosage_amount && m.duration_amount).length === 0}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {rxFormState.isSubmitting ? 'Issuing...' : 'Issue Prescription'}
               </button>

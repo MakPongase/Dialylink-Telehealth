@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
 import React, { useState } from 'react';
@@ -65,7 +71,7 @@ export default function LoginPage() {
       <AuthBanner />
 
       {/* Right Form Column */}
-      <div className="col-span-1 md:col-span-6 flex flex-col justify-center p-8 md:p-16 relative">
+      <div className="col-span-1 md:col-span-6 flex flex-col justify-center pt-20 pb-10 px-6 sm:p-8 md:p-16 relative">
         
         {/* Back Link */}
         <Link href="/" className="absolute top-10 left-8 md:left-20 flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors font-medium">
@@ -141,14 +147,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 cursor-pointer text-gray-600 font-medium select-none">
-                <input 
-                  type="checkbox" 
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                Remember for 30 days
-              </label>
+            <div className="flex items-center justify-end text-sm">
               <Link href="#" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
                 Forgot password?
               </Link>

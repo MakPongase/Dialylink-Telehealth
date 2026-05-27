@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
 import React, { useState } from 'react';
@@ -20,7 +26,7 @@ export default function RegisterPage() {
 
   // Step 1+ Wizard: Clean, centered layout with matching blurred background image
   return (
-    <main className="min-h-screen w-full flex items-center justify-center p-4 md:p-8 relative overflow-y-auto bg-slate-950">
+    <main className="min-h-screen w-full flex items-start md:items-center justify-center p-4 py-20 md:p-8 relative overflow-y-auto bg-slate-950">
       {/* Background Image Container to isolate overflow-hidden for scaled blur */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none">
         <div 

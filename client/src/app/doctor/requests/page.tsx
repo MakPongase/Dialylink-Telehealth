@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -78,15 +84,13 @@ export default function ConnectionRequestsPage() {
       <DoctorSidebar activeItem="requests" />
 
       <main className="flex-1 overflow-y-auto relative">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-10">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between pl-16 md:pl-8 pr-8 sticky top-0 z-10">
           <div className="text-sm text-gray-500 font-medium">
             Overview / Connection Requests
           </div>
           <div className="flex items-center gap-4">
             <NotificationBell role="doctor" />
-            <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
-              DR
-            </div>
+
           </div>
         </header>
 

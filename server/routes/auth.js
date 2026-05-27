@@ -235,5 +235,37 @@ router.get('/me', verifyToken, async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error fetching user details.' });
   }
 });
+// PATCH /password
+router.patch('/password', verifyToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ success: false, message: 'Current and new password are required.' });
+  }
+
+  try {
+    const userRes = await pool.query('SELECT password_hash FROM users WHERE id = $1', [req.user.id]);
+    if (userRes.rowCount === 0) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+    
+    const user = userRes.rows[0];
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Incorrect current password.' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    
+    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, req.user.id]);
+
+    return res.json({ success: true, message: 'Password updated successfully.' });
+
+  } catch (error) {
+    console.error('Update password error:', error);
+    return res.status(500).json({ success: false, message: 'Server error updating password.' });
+  }
+});
 
 module.exports = router;

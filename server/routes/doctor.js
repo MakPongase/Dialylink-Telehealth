@@ -254,9 +254,9 @@ router.post('/patients/:id/sessions', async (req, res) => {
     const insertRes = await pool.query(
       `INSERT INTO dialysis_sessions 
        (patient_id, session_date, bp_before, bp_after, weight_before, weight_after, fluid_intake_ml, duration_minutes, symptoms, notes,
-        dialysis_type, blood_flow_rate, access_site, ultrafiltration_volume, num_exchanges, dwell_time_hours, fill_volume_ml, drain_volume_ml, dialysate_glucose_percent, effluent_appearance, idwg_kg)
+        dialysis_type, blood_flow_rate, access_site, ultrafiltration_volume, num_exchanges, dwell_time_hours, fill_volume_ml, drain_volume_ml, dialysate_glucose_percent, effluent_appearance, idwg_kg, logged_by_role)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-               $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) RETURNING *`,
+               $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22) RETURNING *`,
       [
         patientProfileId,
         session_date || new Date().toISOString().split('T')[0],
@@ -271,7 +271,8 @@ router.post('/patients/:id/sessions', async (req, res) => {
         dtype === 'peritoneal' ? drain_volume_ml : null,
         dtype === 'peritoneal' ? dialysate_glucose_percent : null,
         dtype === 'peritoneal' ? effluent_appearance : null,
-        idwg_kg
+        idwg_kg,
+        'doctor'
       ]
     );
 
@@ -1068,19 +1069,19 @@ the trend over the next 2–3 sessions."
 
 Settings to use:
 - temperature: 0.3 (factual, data-driven)
-- maxTokens: 512
-- Keep responses under 250 words normally, up to 400 for complex summaries
+- Aim for complete, thorough responses — do not truncate or cut off mid-sentence
+- Keep responses focused: 200-350 words for simple questions, up to 500 for complex summaries
 
 The doctor trusts you to be accurate and grounded in their patient's data. 
 Never speculate beyond what the data shows.`;
 
     // Call Gemini API with fallback
-    const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    const models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash'];
     const body = {
       system_instruction: { parts: [{ text: systemInstruction }] },
       contents: messages,
       generationConfig: {
-        maxOutputTokens: 800,
+        maxOutputTokens: 2048,
         temperature: 0.3
       }
     };
@@ -1120,7 +1121,7 @@ Never speculate beyond what the data shows.`;
       return res.status(503).json({ success: false, message: errorMessage });
     }
 
-    const reply = lastData.candidates[0].content.parts[0].text;
+    const reply = lastData.candidates[0].content.parts.map(p => p.text).join('');
     return res.json({ success: true, reply });
 
   } catch (error) {

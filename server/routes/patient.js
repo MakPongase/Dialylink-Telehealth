@@ -105,7 +105,7 @@ router.get('/dashboard', async (req, res) => {
 
     // 1. Fetch connected doctor info
     const docRes = await pool.query(
-      `SELECT dp.id, u.full_name as name, dp.specialization, u.profile_photo_url
+      `SELECT dp.id, dp.user_id, u.full_name as name, dp.specialization, u.profile_photo_url
        FROM patient_profiles pp
        JOIN doctor_profiles dp ON pp.connected_doctor_id = dp.id
        JOIN users u ON dp.user_id = u.id
@@ -471,117 +471,6 @@ router.post('/labs', async (req, res) => {
   }
 });
 
-// GET /prescriptions/:groupId/pdf
-router.get('/prescriptions/:groupId/pdf', async (req, res) => {
-  const { groupId } = req.params;
-  const PDFDocument = require('pdfkit');
-  try {
-    const patientProfileId = await getPatientProfileId(req.user.id);
-    
-    // 1. Fetch prescription group
-    const groupRes = await pool.query(
-      `SELECT pg.*, dp.id as doctor_profile_id, dp.license_number, dp.specialization, dp.hospital_affiliation, 
-              u_doc.full_name as doctor_name
-       FROM prescription_groups pg
-       JOIN doctor_profiles dp ON pg.doctor_id = dp.id
-       JOIN users u_doc ON dp.user_id = u_doc.id
-       WHERE pg.id = $1 AND pg.patient_id = $2`,
-      [groupId, patientProfileId]
-    );
-
-    if (groupRes.rowCount === 0) {
-      return res.status(403).json({ success: false, message: 'Prescription not found or access denied.' });
-    }
-    const group = groupRes.rows[0];
-
-    // 2. Fetch all prescriptions
-    const medsRes = await pool.query(
-      `SELECT * FROM prescriptions WHERE group_id = $1`,
-      [groupId]
-    );
-    const meds = medsRes.rows;
-
-    // 4. Fetch patient info
-    const patRes = await pool.query(
-      `SELECT pp.date_of_birth, pp.blood_type, u.full_name
-       FROM patient_profiles pp
-       JOIN users u ON pp.user_id = u.id
-       WHERE pp.id = $1`,
-      [patientProfileId]
-    );
-    const patient = patRes.rows[0];
-
-    // 5. Generate PDF
-    const doc = new PDFDocument({ size: 'A5', margin: 15 });
-    
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="prescription-${groupId.substring(0,8)}.pdf"`);
-    doc.pipe(res);
-
-    // Light gray border rectangle inset 15pt from edges
-    doc.rect(15, 15, 419 - 30, 595 - 30).stroke('#e5e7eb');
-
-    // TOP SECTION
-    doc.font('Helvetica-Bold').fontSize(16).fillColor('#0d9488').text('DialyLink', 30, 30);
-    
-    // Right: Date issued
-    const issuedDate = new Date(group.issued_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    doc.font('Helvetica').fontSize(10).fillColor('#6b7280').text(issuedDate, 30, 34, { align: 'right', width: 419 - 60 });
-
-    doc.moveDown(1);
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000').text(`Dr. ${group.doctor_name}`, 30, doc.y);
-    doc.font('Helvetica').fontSize(10).fillColor('#6b7280')
-       .text(`${group.specialization || 'Nephrologist'} | PRC Lic. No. ${group.license_number}`, 30, doc.y + 4)
-       .text(group.hospital_affiliation || '', 30, doc.y + 2);
-    
-    doc.moveDown(0.5);
-    doc.moveTo(30, doc.y).lineTo(419 - 30, doc.y).strokeColor('#e5e7eb').stroke();
-    doc.moveDown(0.5);
-
-    // PATIENT SECTION
-    const formattedDob = patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A';
-    doc.font('Helvetica-Bold').fontSize(10).fillColor('#000000').text(`PATIENT: ${patient.full_name}`, 30, doc.y);
-    doc.font('Helvetica').fontSize(10).fillColor('#6b7280').text(`DOB: ${formattedDob}  Blood Type: ${patient.blood_type || 'Unknown'}`, 30, doc.y + 2);
-    
-    doc.moveDown(0.5);
-    doc.moveTo(30, doc.y).lineTo(419 - 30, doc.y).strokeColor('#e5e7eb').stroke();
-    doc.moveDown(0.5);
-
-    // Rx SECTION
-    doc.font('Helvetica-Bold').fontSize(24).fillColor('#000000').text('Rx', 30, doc.y);
-    doc.moveDown(0.5);
-
-    meds.forEach((med, idx) => {
-      doc.font('Helvetica-Bold').fontSize(12).fillColor('#000000').text(`${idx + 1}. ${med.medication_name} ${med.dosage}`, 30, doc.y);
-      doc.font('Helvetica').fontSize(10).fillColor('#4b5563').text(`${med.frequency} — ${med.duration}`, 45, doc.y + 2);
-      if (med.instructions) {
-        doc.font('Helvetica-Oblique').fontSize(9).fillColor('#6b7280').text(med.instructions, 45, doc.y + 2);
-      }
-      doc.moveDown(0.5);
-    });
-
-    if (group.notes) {
-      doc.moveDown(1);
-      doc.font('Helvetica-Bold').fontSize(9).fillColor('#6b7280').text('Notes: ', 30, doc.y, { continued: true });
-      doc.font('Helvetica-Oblique').text(group.notes);
-    }
-
-    doc.moveDown(1);
-    doc.moveTo(30, doc.y).lineTo(419 - 30, doc.y).strokeColor('#e5e7eb').stroke();
-    
-    // FOOTER (absolute position near bottom)
-    doc.font('Helvetica').fontSize(8).fillColor('#9ca3af')
-       .text('This prescription was issued digitally via DialyLink.', 30, 595 - 40, { align: 'center', width: 419 - 60 });
-    doc.text(`Ref: ${groupId.substring(0,8)}`, 30, 595 - 40, { align: 'right', width: 419 - 60 });
-
-    doc.end();
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    if (!res.headersSent) {
-      res.status(500).json({ success: false, message: 'Server error generating PDF.' });
-    }
-  }
-});
 // GET /prescriptions
 router.get('/prescriptions', async (req, res) => {
   try {
@@ -1023,9 +912,9 @@ router.get('/connection-request/status', async (req, res) => {
 // ===========================
 
 // Helper: call Gemini API (with fallback)
-async function callGemini({ systemInstruction, contents, maxTokens = 512, temperature = 0.3, responseSchema = null }) {
+async function callGemini({ systemInstruction, contents, maxTokens = 2048, temperature = 0.3, responseSchema = null }) {
   const key = process.env.GEMINI_API_KEY;
-  const models = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+  const models = ['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash'];
   
   const body = {
     system_instruction: { parts: [{ text: systemInstruction }] },
@@ -1049,7 +938,7 @@ async function callGemini({ systemInstruction, contents, maxTokens = 512, temper
       const data = await response.json();
       if (!response.ok) throw data;
       
-      return data.candidates[0].content.parts[0].text;
+      return data.candidates[0].content.parts.map(p => p.text).join('');
     } catch (err) {
       console.warn(`[AI Fallback] Model ${model} failed. Trying next...`);
       lastError = err;

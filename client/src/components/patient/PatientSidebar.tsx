@@ -42,7 +42,7 @@ export function PatientSidebar({ activeItem }: PatientSidebarProps) {
     setTimeout(() => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      document.cookie = 'token=; Max-Age=0; path=/;';
+      document.cookie = 'token=; Max-Age=0; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
       router.push('/login');
     }, 1500);
   };

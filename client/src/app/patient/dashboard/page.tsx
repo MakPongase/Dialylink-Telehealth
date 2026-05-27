@@ -121,25 +121,15 @@ export default function PatientDashboard() {
             </div>
           </div>
           
-          {!connected_doctor && (
-            <div className="bg-amber-50 border-t border-b border-amber-200 px-4 sm:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          {!connected_doctor && !loading && (
+            <div className="bg-amber-50 border-t border-amber-200 px-4 sm:px-8 py-4 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start gap-2 text-amber-800 text-sm font-medium">
-                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" /> 
                 <span>You are not connected to a doctor yet. Connect with a doctor to book appointments and receive prescriptions.</span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button 
-                  onClick={() => setConnectModalOpen(true)}
-                  className="text-xs font-bold text-amber-700 bg-white border border-amber-200 hover:bg-amber-100 px-4 py-1.5 rounded-full transition-colors"
-                >
-                  Enter Connection Code
-                </button>
-                <button 
-                  onClick={() => router.push('/patient/find-doctor')}
-                  className="text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-4 py-1.5 rounded-full transition-colors"
-                >
-                  Find a Doctor &rarr;
-                </button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <button onClick={() => setConnectModalOpen(true)} className="text-xs font-bold text-amber-700 bg-white border border-amber-200 hover:bg-amber-50 px-4 py-2 sm:py-1.5 rounded-full transition-colors w-full sm:w-auto">Enter Connection Code</button>
+                <button onClick={() => router.push('/patient/find-doctor')} className="text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-4 py-2 sm:py-1.5 rounded-full transition-colors w-full sm:w-auto shrink-0">Find a Doctor &rarr;</button>
               </div>
             </div>
           )}
@@ -244,8 +234,7 @@ export default function PatientDashboard() {
                 )}
 
                 {/* Recent Sessions */}
-                {connected_doctor && (
-                  <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                     <div className="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                       <h3 className="font-bold text-gray-900">Recent Dialysis Sessions</h3>
                       <button onClick={() => router.push('/patient/monitoring')} className="text-xs font-semibold text-teal-600 hover:text-teal-700">View all</button>
@@ -295,8 +284,6 @@ export default function PatientDashboard() {
                       </table>
                     </div>
                   </div>
-                )}
-
               </div>
 
               {/* Right Column (40%) */}

@@ -93,14 +93,16 @@ export function PatientSidebar({ activeItem }: PatientSidebarProps) {
           <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" route="/patient/dashboard" />
         </div>
 
-        {hasDoctor && (
-          <div className="space-y-1">
-            <h4 className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">My Health</h4>
-            <NavItem id="monitoring" icon={Activity} label="Monitoring Log" route="/patient/monitoring" />
-            <NavItem id="records" icon={FileText} label="Health Records" route="/patient/records" />
-            <NavItem id="appointments" icon={Calendar} label="Appointments" route="/patient/appointments" />
-          </div>
-        )}
+        <div className="space-y-1">
+          <h4 className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">My Health</h4>
+          <NavItem id="monitoring" icon={Activity} label="Monitoring Log" route="/patient/monitoring" />
+          {hasDoctor && (
+            <>
+              <NavItem id="records" icon={FileText} label="Health Records" route="/patient/records" />
+              <NavItem id="appointments" icon={Calendar} label="Appointments" route="/patient/appointments" />
+            </>
+          )}
+        </div>
         
         <div className="space-y-1">
           <h4 className="px-4 text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Communication</h4>

@@ -49,7 +49,7 @@ router.get('/patients', async (req, res) => {
         (SELECT session_date FROM dialysis_sessions WHERE patient_id = pp.id ORDER BY session_date DESC, logged_at DESC LIMIT 1) as last_session_date,
         (SELECT bp_after FROM dialysis_sessions WHERE patient_id = pp.id ORDER BY session_date DESC, logged_at DESC LIMIT 1) as last_bp_after,
         (SELECT weight_before FROM dialysis_sessions WHERE patient_id = pp.id ORDER BY session_date DESC, logged_at DESC LIMIT 1) as last_weight_before,
-        (SELECT weight_after FROM dialysis_sessions WHERE patient_id = pp.id ORDER BY session_date DESC, logged_at DESC LIMIT 2 OFFSET 1) as prev_weight_after
+        (SELECT weight_after FROM dialysis_sessions WHERE patient_id = pp.id ORDER BY session_date DESC, logged_at DESC LIMIT 1 OFFSET 1) as prev_weight_after
       FROM patient_profiles pp
       JOIN users u ON pp.user_id = u.id
       WHERE pp.connected_doctor_id = $1`,

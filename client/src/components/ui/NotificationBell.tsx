@@ -170,7 +170,7 @@ export function NotificationBell({ role }: { role: 'patient' | 'doctor' }) {
             ) : (
               <div className="p-8 text-center flex flex-col items-center justify-center text-gray-400">
                 <Check className="h-8 w-8 mb-2 opacity-50" />
-                <p className="text-sm font-medium">You're all caught up ✓</p>
+                <p className="text-sm font-medium">You're all caught up</p>
               </div>
             )}
           </div>

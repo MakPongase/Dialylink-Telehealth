@@ -249,13 +249,14 @@ export default function AppointmentsPage() {
             </div>
           </div>
           {!connectedDoctor && !loading && (
-            <div className="bg-amber-50 border-t border-amber-200 px-8 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-amber-800 text-sm font-medium">
-                <AlertCircle className="h-4 w-4" /> You are not connected to a doctor yet.
+            <div className="bg-amber-50 border-t border-amber-200 px-4 sm:px-8 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-2 text-amber-800 text-sm font-medium">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>You are not connected to a doctor yet.</span>
               </div>
               <button onClick={() => router.push('/patient/find-doctor')}
-                className="text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-4 py-1.5 rounded-full transition-colors">
-                Find a Doctor →
+                className="text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-4 py-1.5 rounded-full transition-colors shrink-0">
+                Find a Doctor &rarr;
               </button>
             </div>
           )}

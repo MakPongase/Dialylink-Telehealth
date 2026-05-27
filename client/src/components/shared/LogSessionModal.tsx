@@ -130,7 +130,7 @@ export function LogSessionModal({ isOpen, onClose, onSubmit, isSubmitting, isDoc
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-bold text-gray-700 mb-1">Session Date</label>
             <input type="date" required value={sessionDate} onChange={e => setSessionDate(e.target.value)}
@@ -145,7 +145,7 @@ export function LogSessionModal({ isOpen, onClose, onSubmit, isSubmitting, isDoc
 
         <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg space-y-4">
           <h4 className="text-xs font-bold text-blue-900 uppercase tracking-wider">Blood Pressure (mmHg)</h4>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-blue-800 mb-1">Pre-Dialysis</label>
               <input type="text" placeholder="e.g. 120/80" required pattern="\d{2,3}\/\d{2,3}" title="Format: 120/80"
@@ -167,7 +167,7 @@ export function LogSessionModal({ isOpen, onClose, onSubmit, isSubmitting, isDoc
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Weight (kg)</h4>
             <div>
@@ -216,7 +216,7 @@ export function LogSessionModal({ isOpen, onClose, onSubmit, isSubmitting, isDoc
         {dialysisType === 'hemodialysis' && (
           <div className="p-3 bg-teal-50 border border-teal-100 rounded-lg space-y-4">
             <h4 className="text-xs font-bold text-teal-900 uppercase tracking-wider">Hemodialysis Details</h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-teal-800 mb-1">Blood Flow Rate (mL/min)</label>
                 <input type="number" placeholder="e.g. 300" value={bloodFlowRate} onChange={e => setBloodFlowRate(e.target.value)}
@@ -244,7 +244,7 @@ export function LogSessionModal({ isOpen, onClose, onSubmit, isSubmitting, isDoc
         {dialysisType === 'peritoneal' && (
           <div className="p-3 bg-purple-50 border border-purple-100 rounded-lg space-y-4">
             <h4 className="text-xs font-bold text-purple-900 uppercase tracking-wider">Peritoneal Details</h4>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-purple-800 mb-1">Number of Exchanges</label>
                 <input type="number" required value={numExchanges} onChange={e => setNumExchanges(e.target.value)}

@@ -35,7 +35,8 @@ router.post('/register', async (req, res) => {
     full_name, email, password, role, 
     license_number, specialization, years_experience, 
     hospital_affiliation, phone, address, city, province, bio, 
-    profile_photo_url, prc_doc_url 
+    profile_photo_url, prc_doc_url,
+    date_of_birth, blood_type, emergency_contact_name, emergency_contact_phone
   } = req.body;
 
   if (!full_name || !email || !password || !role) {
@@ -93,8 +94,12 @@ router.post('/register', async (req, res) => {
       );
     } else if (role === 'patient') {
       await client.query(
-        `INSERT INTO patient_profiles (user_id, address, city, province) VALUES ($1, $2, $3, $4)`,
-        [user.id, address || null, city || null, province || null]
+        `INSERT INTO patient_profiles (user_id, address, city, province, date_of_birth, blood_type, emergency_contact_name, emergency_contact_phone) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          user.id, address || null, city || null, province || null,
+          date_of_birth || null, blood_type || null, emergency_contact_name || null, emergency_contact_phone || null
+        ]
       );
     }
 

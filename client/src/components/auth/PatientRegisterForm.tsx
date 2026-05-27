@@ -6,7 +6,7 @@ import StepIndicator from './StepIndicator';
 import PasswordStrengthBar from './PasswordStrengthBar';
 import api from '../../lib/api';
 import { getProvinces, getCities, getBarangays, LocationItem } from '../../lib/location-api';
-import { ShieldAlert, CheckCircle2, CheckCircle, XCircle } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
 
 interface PatientRegisterFormProps {
   onBackToRoleSelection: () => void;
@@ -22,9 +22,12 @@ export default function PatientRegisterForm({ onBackToRoleSelection }: PatientRe
   const [middleName, setMiddleName] = useState('');
   const [lastName, setLastName] = useState('');
   
+  // Account State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [bloodType, setBloodType] = useState('A+');
@@ -393,14 +396,23 @@ export default function PatientRegisterForm({ onBackToRoleSelection }: PatientRe
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                   Password <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  className={`w-full px-4 py-3 rounded-md border text-sm focus:outline-none focus:ring-1 ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-600'}`}
-                  placeholder="At least 8 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onBlur={(e) => handleBlur('password', e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className={`w-full px-4 py-3 rounded-md border text-sm focus:outline-none focus:ring-1 ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-600'}`}
+                    placeholder="At least 8 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onBlur={(e) => handleBlur('password', e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.password && <p className="text-xs text-red-500 mt-1 font-medium">{errors.password}</p>}
                 <div className="mt-2">
                   <PasswordStrengthBar password={password} />
@@ -420,14 +432,23 @@ export default function PatientRegisterForm({ onBackToRoleSelection }: PatientRe
                     </span>
                   )}
                 </label>
-                <input
-                  type="password"
-                  className={`w-full px-4 py-3 rounded-md border text-sm focus:outline-none focus:ring-1 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-600'}`}
-                  placeholder="Re-enter your password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  onBlur={(e) => handleBlur('confirmPassword', e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    className={`w-full px-4 py-3 rounded-md border text-sm focus:outline-none focus:ring-1 ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-600'}`}
+                    placeholder="Re-enter your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onBlur={(e) => handleBlur('confirmPassword', e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {errors.confirmPassword && <p className="text-xs text-red-500 mt-1 font-medium">{errors.confirmPassword}</p>}
               </div>
             </div>
@@ -444,6 +465,7 @@ export default function PatientRegisterForm({ onBackToRoleSelection }: PatientRe
                 </label>
                 <input
                   type="date"
+                  max={new Date().toISOString().split('T')[0]}
                   className={`w-full px-4 py-3 rounded-md border text-sm focus:outline-none focus:ring-1 ${errors.dateOfBirth ? 'border-red-500 focus:ring-red-500' : 'border-gray-200 focus:ring-blue-600'}`}
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}

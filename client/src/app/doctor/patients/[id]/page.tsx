@@ -580,18 +580,38 @@ export default function PatientDetailsPage() {
 
              {/* DOCTOR NOTES TAB */}
              {activeTab === 'notes' && (
-                <div className="p-6 flex flex-col h-[500px] bg-gray-50/30">
-                  <p className="text-sm text-gray-500 mb-4 font-medium">Private clinical notes. These are not visible to the patient.</p>
-                  <textarea
-                    className="flex-1 w-full border border-gray-200 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none shadow-sm bg-white leading-relaxed"
-                    placeholder="Enter clinical observations, treatment plans, and private notes here..."
-                    value={doctorNotes}
-                    onChange={(e) => setDoctorNotes(e.target.value)}
-                  />
-                  <div className="mt-4 flex justify-end">
-                    <button onClick={saveDoctorNotes} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                <div className="p-8 flex flex-col h-[600px] bg-white rounded-b-xl border-t-0">
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">Clinical Notes</h3>
+                      <p className="text-sm text-gray-500 mt-1">Private observations and treatment plans. Not visible to the patient.</p>
+                    </div>
+                    <button onClick={saveDoctorNotes} className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-full shadow-md hover:shadow-lg transition-all flex items-center gap-2 transform active:scale-95">
                       <Check className="h-4 w-4" /> Save Notes
                     </button>
+                  </div>
+                  
+                  <div className="flex-1 relative rounded-xl border border-gray-200 bg-[#fbfbfb] overflow-hidden group focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent focus-within:bg-white transition-all shadow-inner">
+                    {/* Red vertical margin line */}
+                    <div className="absolute top-0 bottom-0 left-12 w-0.5 bg-red-200/60 z-0 pointer-events-none"></div>
+                    
+                    <textarea
+                      className="absolute inset-0 w-full h-full p-8 pl-16 text-gray-800 text-base resize-none outline-none z-10 bg-transparent"
+                      style={{
+                        lineHeight: '32px',
+                        backgroundImage: 'repeating-linear-gradient(transparent, transparent 31px, #e2e8f0 31px, #e2e8f0 32px)',
+                        backgroundAttachment: 'local',
+                        backgroundPosition: '0 8px'
+                      }}
+                      placeholder="Begin typing clinical observations..."
+                      value={doctorNotes}
+                      onChange={(e) => setDoctorNotes(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="mt-4 flex justify-between items-center text-xs font-semibold text-gray-400">
+                    <span>Automatically encrypted & secured</span>
+                    <span>Last updated: {new Date().toLocaleDateString()}</span>
                   </div>
                 </div>
              )}

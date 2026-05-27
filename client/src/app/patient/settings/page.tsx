@@ -54,6 +54,7 @@ export default function PatientSettings() {
           date_of_birth: d.date_of_birth ? d.date_of_birth.split('T')[0] : '',
           blood_type: d.blood_type || '',
           address: d.address || '',
+          emergency_contact_name: d.emergency_contact_name || '',
           emergency_contact_phone: d.emergency_contact_phone || '',
           connected_doctor_id: d.connected_doctor_id || null,
         });

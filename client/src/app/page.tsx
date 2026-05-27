@@ -81,18 +81,18 @@ export default function Home() {
         <section className="py-10 px-6 md:px-12 border-y border-slate-200 bg-white/60 backdrop-blur-sm mt-12 shadow-sm">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-around items-center gap-8 text-center">
             <div className="space-y-2">
-              <h4 className="text-xl font-medium text-blue-600">Kidney Care Support</h4>
-              <p className="text-sm text-slate-500">Verified clinical guidelines</p>
+              <h4 className="text-xl font-bold text-slate-900">Remote Monitoring</h4>
+              <p className="text-sm text-slate-500">Track vitals seamlessly</p>
             </div>
             <div className="h-12 w-px bg-slate-200 hidden sm:block"></div>
             <div className="space-y-2">
-              <h4 className="text-4xl font-extrabold text-slate-900">24/7</h4>
-              <p className="text-sm text-slate-500">Telemedicine channels</p>
+              <h4 className="text-xl font-bold text-slate-900">Direct Access</h4>
+              <p className="text-sm text-slate-500">Connect with doctors</p>
             </div>
             <div className="h-12 w-px bg-slate-200 hidden sm:block"></div>
             <div className="space-y-2">
-              <h4 className="text-4xl font-extrabold text-slate-900">100%</h4>
-              <p className="text-sm text-slate-500">Secure data encryption</p>
+              <h4 className="text-xl font-bold text-slate-900">Data Privacy</h4>
+              <p className="text-sm text-slate-500">Encrypted health records</p>
             </div>
           </div>
         </section>

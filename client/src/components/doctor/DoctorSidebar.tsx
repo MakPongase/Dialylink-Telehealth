@@ -31,11 +31,16 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
     fetchRequestsCount();
   }, []);
 
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    document.cookie = 'token=; Max-Age=0; path=/;';
-    router.push('/login');
+    setIsLoggingOut(true);
+    setTimeout(() => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      document.cookie = 'token=; Max-Age=0; path=/;';
+      router.push('/login');
+    }, 1500);
   };
 
   const NavItem = ({ id, icon: Icon, label, route, badge }: { id: string, icon: any, label: string, route: string, badge?: number }) => (
@@ -99,6 +104,15 @@ export function DoctorSidebar({ activeItem }: DoctorSidebarProps) {
           Sign Out
         </button>
       </div>
+
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/60 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 bg-white p-6 rounded-2xl shadow-xl border border-gray-100">
+            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-gray-700 font-semibold text-sm">Signing out...</p>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

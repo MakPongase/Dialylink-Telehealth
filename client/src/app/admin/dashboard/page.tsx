@@ -256,11 +256,6 @@ export default function AdminDashboard() {
             {activeTab === 'approvals' && 'Operation / Doctor Approvals'}
             {activeTab === 'directory' && 'Operation / User Directory'}
           </div>
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
-              AD
-            </div>
-          </div>
         </header>
 
         <div className="p-8 max-w-6xl mx-auto space-y-8">

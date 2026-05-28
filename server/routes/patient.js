@@ -830,6 +830,59 @@ router.patch('/appointments/:id/reschedule', async (req, res) => {
   }
 });
 
+// PATCH /appointments/:id/cancel
+router.patch('/appointments/:id/cancel', async (req, res) => {
+  const { id } = req.params;
+  const { cancellation_reason, cancellation_notes } = req.body;
+
+  try {
+    const patientProfileId = await getPatientProfileId(req.user.id);
+
+    // Verify appointment belongs to patient
+    const apptRes = await pool.query(
+      `SELECT * FROM appointments WHERE id = $1 AND patient_id = $2`,
+      [id, patientProfileId]
+    );
+
+    if (apptRes.rowCount === 0) {
+      return res.status(404).json({ success: false, message: 'Appointment not found.' });
+    }
+
+    if (apptRes.rows[0].status === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'Appointment is already cancelled.' });
+    }
+
+    const doctorId = apptRes.rows[0].doctor_id;
+
+    // Update appointment
+    const updateRes = await pool.query(
+      `UPDATE appointments 
+       SET status = 'cancelled', 
+           cancellation_reason = $1, 
+           cancellation_notes = $2 
+       WHERE id = $3 
+       RETURNING *`,
+      [cancellation_reason || null, cancellation_notes || null, id]
+    );
+
+    // Notify doctor
+    const docRes = await pool.query('SELECT user_id FROM doctor_profiles WHERE id = $1', [doctorId]);
+    if (docRes.rowCount > 0) {
+      const typeStr = apptRes.rows[0].type || 'appointment';
+      await sendNotification({ 
+        user_id: docRes.rows[0].user_id, 
+        type: 'appointment_cancelled', 
+        message: `Patient ${req.user.full_name} has cancelled their ${typeStr}. Reason: ${cancellation_reason || 'Not provided'}` 
+      });
+    }
+
+    return res.json({ success: true, data: updateRes.rows[0], message: 'Appointment cancelled successfully.' });
+  } catch (error) {
+    console.error('Error cancelling appointment:', error);
+    return res.status(500).json({ success: false, message: 'Server error cancelling appointment.' });
+  }
+});
+
 // POST /connection-request
 router.post('/connection-request', async (req, res) => {
   const { doctor_id, message } = req.body;

@@ -55,6 +55,12 @@ export default function AppointmentsPage() {
   const [rescheduleApptId, setRescheduleApptId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string, type: 'error' | 'success' } | null>(null);
 
+  // ── cancel state
+  const [cancelApptId, setCancelApptId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState('Schedule conflict');
+  const [cancelNotes, setCancelNotes] = useState('');
+  const [isCancelling, setIsCancelling] = useState(false);
+
   const showToast = useCallback((message: string, type: 'error' | 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
@@ -209,6 +215,28 @@ export default function AppointmentsPage() {
       showToast(e.response?.data?.message || 'Failed to book.', 'error');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelSubmit = async () => {
+    if (!cancelApptId || isCancelling) return;
+    setIsCancelling(true);
+    try {
+      const res = await api.patch(`/api/patient/appointments/${cancelApptId}/cancel`, {
+        cancellation_reason: cancelReason,
+        cancellation_notes: cancelNotes
+      });
+      if (res.data.success) {
+        showToast('Appointment cancelled successfully.', 'success');
+        await fetchData();
+        setCancelApptId(null);
+        setCancelReason('Schedule conflict');
+        setCancelNotes('');
+      }
+    } catch (e: any) {
+      showToast(e.response?.data?.message || 'Failed to cancel appointment.', 'error');
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -529,17 +557,29 @@ export default function AppointmentsPage() {
                               {appt.status === 'cancelled' && <span className="bg-red-50 text-red-700 border border-red-200 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1"><XCircle className="h-3 w-3" /> Cancelled</span>}
                             </div>
                             {activeTab === 'upcoming' && (
-                              <button
-                                onClick={() => {
-                                  setRescheduleApptId(appt.id);
-                                  setApptType(appt.type);
-                                  setActiveTab('book');
-                                }}
-                                className="flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-3 py-1.5 rounded-full transition-colors shadow-sm"
-                              >
-                                <CalendarDays className="h-3.5 w-3.5" />
-                                Reschedule
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => {
+                                    setCancelApptId(appt.id);
+                                    setCancelReason('Schedule conflict');
+                                    setCancelNotes('');
+                                  }}
+                                  className="flex items-center gap-1.5 text-xs font-bold text-red-700 bg-white border border-red-200 hover:bg-red-50 hover:border-red-300 px-3 py-1.5 rounded-full transition-colors shadow-sm"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setRescheduleApptId(appt.id);
+                                    setApptType(appt.type);
+                                    setActiveTab('book');
+                                  }}
+                                  className="flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-100 px-3 py-1.5 rounded-full transition-colors shadow-sm"
+                                >
+                                  <CalendarDays className="h-3.5 w-3.5" />
+                                  Reschedule
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -563,6 +603,14 @@ export default function AppointmentsPage() {
                                 </a>
                               </div>
                             )}
+                            {appt.status === 'cancelled' && appt.cancellation_reason && (
+                              <div className="bg-red-50 p-3 rounded-lg border border-red-100">
+                                <p className="text-sm text-red-800"><span className="font-semibold">Cancellation Reason:</span> {appt.cancellation_reason}</p>
+                                {appt.cancellation_notes && (
+                                  <p className="text-sm text-red-700 mt-1"><span className="font-semibold">Notes:</span> {appt.cancellation_notes}</p>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -574,6 +622,76 @@ export default function AppointmentsPage() {
           )}
         </main>
       </div>
+
+      {/* ── CANCELLATION MODAL ── */}
+      {cancelApptId && (
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+              <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                Cancel Appointment
+              </h3>
+              <button 
+                onClick={() => setCancelApptId(null)} 
+                className="text-gray-400 hover:text-gray-600 p-1"
+                disabled={isCancelling}
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600 mb-2">Are you sure you want to cancel this appointment? Please provide a reason.</p>
+              
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">Reason for Cancellation</label>
+                <select 
+                  value={cancelReason} 
+                  onChange={e => setCancelReason(e.target.value)}
+                  disabled={isCancelling}
+                  className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none"
+                >
+                  <option value="Schedule conflict">Schedule conflict</option>
+                  <option value="Health reasons">Health reasons</option>
+                  <option value="Found another doctor">Found another doctor</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">Additional Notes <span className="font-normal text-gray-400">(Optional)</span></label>
+                <textarea 
+                  value={cancelNotes} 
+                  onChange={e => setCancelNotes(e.target.value)}
+                  disabled={isCancelling}
+                  rows={3}
+                  placeholder="Tell us a little more about why you're cancelling..."
+                  className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-red-500 outline-none resize-none"
+                />
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button 
+                  onClick={() => setCancelApptId(null)}
+                  disabled={isCancelling}
+                  className="flex-1 px-4 py-2.5 rounded-xl font-bold text-sm text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  Keep Appointment
+                </button>
+                <button 
+                  onClick={handleCancelSubmit}
+                  disabled={isCancelling}
+                  className="flex-1 px-4 py-2.5 rounded-xl font-bold text-sm text-white bg-red-600 hover:bg-red-700 shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  {isCancelling ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                  {isCancelling ? 'Cancelling...' : 'Confirm Cancel'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg border transition-all animate-in slide-in-from-bottom-5 ${

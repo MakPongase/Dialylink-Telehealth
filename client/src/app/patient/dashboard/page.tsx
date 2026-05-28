@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { PatientSidebar } from '../../../components/patient/PatientSidebar';
 import { NotificationBell } from '../../../components/ui/NotificationBell';
+import { StatCard } from '../../../components/ui/StatCard';
 
 import { PatientOnboardingBanner } from '../../../components/patient/PatientOnboardingBanner';
 import { Modal } from '../../../components/ui/Modal';
@@ -144,12 +145,12 @@ export default function PatientDashboard() {
             {/* KPI Cards */}
             {connected_doctor && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                  <div className="flex items-center gap-2 text-gray-500 mb-2">
-                    <Calendar className="h-4 w-4 text-blue-500" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">Next Appointment</span>
-                  </div>
-                  {nextAppointment ? (
+                <StatCard
+                  variant="vertical"
+                  title="Next Appointment"
+                  icon={Calendar}
+                  iconColorClass="text-blue-500"
+                  value={nextAppointment ? (
                     <div>
                       <div className="text-lg font-bold text-gray-900">{new Date(nextAppointment.scheduled_at).toLocaleDateString()}</div>
                       <div className="text-sm text-gray-600 truncate">Dr. {nextAppointment.doctor_name}</div>
@@ -157,14 +158,14 @@ export default function PatientDashboard() {
                   ) : (
                     <div className="text-lg font-bold text-gray-400">None scheduled</div>
                   )}
-                </div>
+                />
 
-                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                  <div className="flex items-center gap-2 text-gray-500 mb-2">
-                    <Activity className="h-4 w-4 text-teal-500" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">Last Session</span>
-                  </div>
-                  {lastSession ? (
+                <StatCard
+                  variant="vertical"
+                  title="Last Session"
+                  icon={Activity}
+                  iconColorClass="text-teal-500"
+                  value={lastSession ? (
                     <div>
                       <div className="text-lg font-bold text-gray-900">{new Date(lastSession.session_date).toLocaleDateString()}</div>
                       <div className="text-sm text-gray-600">{lastSession.duration_minutes} mins</div>
@@ -172,15 +173,15 @@ export default function PatientDashboard() {
                   ) : (
                     <div className="text-lg font-bold text-gray-400">No sessions yet</div>
                   )}
-                </div>
+                />
 
-                <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between">
-                  <div className="flex items-center gap-2 text-gray-500 mb-2">
-                    <FileText className="h-4 w-4 text-emerald-500" />
-                    <span className="text-xs font-semibold uppercase tracking-wider">Active Rx</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{active_prescriptions_count}</div>
-                </div>
+                <StatCard
+                  variant="vertical"
+                  title="Active Rx"
+                  icon={FileText}
+                  iconColorClass="text-emerald-500"
+                  value={<div className="text-2xl font-bold text-gray-900">{active_prescriptions_count}</div>}
+                />
               </div>
             )}
 

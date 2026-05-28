@@ -16,6 +16,7 @@ import {
 import { Modal } from '../../../components/ui/Modal';
 import { DoctorSidebar } from '../../../components/doctor/DoctorSidebar';
 import { NotificationBell } from '../../../components/ui/NotificationBell';
+import { StatCard } from '../../../components/ui/StatCard';
 import { DoctorOnboardingBanner } from '../../../components/doctor/DoctorOnboardingBanner';
 
 export default function DoctorDashboard() {
@@ -211,45 +212,38 @@ export default function DoctorDashboard() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white p-5 border border-gray-200 rounded-xl shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center shrink-0">
-                <Users className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{patients.length}</div>
-                <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Connected Patients</div>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 border border-gray-200 rounded-xl shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 bg-red-50 text-red-600 rounded-lg flex items-center justify-center shrink-0">
-                <AlertCircle className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{patientsWithAlerts}</div>
-                <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Patients w/ Alerts</div>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 border border-gray-200 rounded-xl shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                <Calendar className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{todaysAppointments}</div>
-                <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Today's Appts</div>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 border border-gray-200 rounded-xl shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
-              <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
-                <Activity className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{unreadMessages}</div>
-                <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wider mt-0.5">Unread Messages</div>
-              </div>
-            </div>
+            <StatCard
+              variant="horizontal"
+              title="Connected Patients"
+              value={patients.length}
+              icon={Users}
+              iconBgClass="bg-blue-50"
+              iconColorClass="text-blue-600"
+            />
+            <StatCard
+              variant="horizontal"
+              title="Patients w/ Alerts"
+              value={patientsWithAlerts}
+              icon={AlertCircle}
+              iconBgClass="bg-red-50"
+              iconColorClass="text-red-600"
+            />
+            <StatCard
+              variant="horizontal"
+              title="Today's Appts"
+              value={todaysAppointments}
+              icon={Calendar}
+              iconBgClass="bg-emerald-50"
+              iconColorClass="text-emerald-600"
+            />
+            <StatCard
+              variant="horizontal"
+              title="Unread Messages"
+              value={unreadMessages}
+              icon={Activity}
+              iconBgClass="bg-indigo-50"
+              iconColorClass="text-indigo-600"
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
